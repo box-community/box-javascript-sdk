@@ -6,5 +6,9 @@ export default {
     POST: 'POST',
     PUT: 'PUT',
     DELETE: 'DELETE'
+  },
+  MODES: {
+    SKIP_VALIDATION: 'skipValidation',
+    IGNORE_MODEL_VALUES: 'ignoreModelValues'
   }
 };

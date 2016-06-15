@@ -15,6 +15,8 @@ export default class BasicBoxClient {
     this._accessToken = this._checkTokenType(config);
     this._hasStoredAccessToken = (this._accessToken) ? true : false;
     this._returnsOnlyOptions = (config.noRequestMode && config.noRequestMode === true) ? true : false;
+    this._skipValidation = (config.skipValidation && config.skipValidation === true) ? true : false;
+    this._simpleMode = (config.simpleMode && config.simpleMode === true) ? true : false;
   }
 
   get folders() {

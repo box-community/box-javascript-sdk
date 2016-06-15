@@ -2,26 +2,45 @@
 import BOX_CONSTANTS from '../config/box-constants';
 import VerifyRequiredValues from '../util/verify-required-values';
 import CreateRequestBody from '../util/create-request-body';
-import MapAllRequiredValues from '../util/map-all-required-values';
+import MapValues from '../util/map-values';
+import InvestigateModes from '../util/investigate-modes';
+import NormalizeObjectKeys from '../util/normalize-object-keys';
+import FlattenDotProps from '../util/flatten-dotted-property-names';
+
 const BASE_PATH = '/folders';
-const REQUIRED_VALUES = {
+const MODEL_VALUES = {
   NAME: 'name',
   PARENT: 'parent',
-  ID: 'parent.id'
+  ID: 'parent.id',
+  DESCRIPTION: 'description',
+  SHARED_LINK: 'shared_link',
+  SHARED_LINK_ACCESS: 'shared_link.access',
+  UNSHARED_AT: 'shared_link.unshared_at',
+  PASSWORD: 'shared_link.password',
+  PERMISSIONS: 'permissions',
+  CAN_DOWNLOAD: 'permissions.can_download',
+  CAN_PREVIEW: 'permissions.can_preview',
+  FOLDER_UPLOAD_EMAIL: 'folder_upload_email',
+  FOLDER_UPLOAD_EMAIL_ACCESS: 'folder_upload_email.access',
+  OWNED_BY: 'owned_by',
+  OWNED_BY_ID: 'owned_by.id',
+  SYNC_STATE: 'sync_state',
+  TAGS: 'tags'
 }
 
 export default class Folders {
   constructor(client) {
     this.client = client;
-    this.ALL_REQUIRED_VALUES = MapAllRequiredValues(REQUIRED_VALUES);
+    this.ALL_VALUES = MapValues(MODEL_VALUES);
+    this.FLATTENED_VALUES = FlattenDotProps(this.ALL_VALUES);
   }
 
   _getFolderId(options) {
     let folderId;
-    if (options.folderId) {
-      folderId = options.folderId;
-      delete options.folderId;
-    } else if (options.file && options.file.id) {
+    if (options.folderId || options.folder_id) {
+      folderId = options.folderId || options.folder_id;
+      (options.folderId) ? delete options.folderId : delete options.folder_id;
+    } else if (options.folder && options.folder.id) {
       folderId = options.folder.id;
     } else if (typeof options === 'string') {
       folderId = options;
@@ -31,20 +50,29 @@ export default class Folders {
     return folderId;
   }
 
-  _getFolder(options, values, skipValidation) {
+  _getFolder(options, values, skipValidation, ignoreModelValues) {
+    skipValidation = skipValidation || this.client.skipValidation || false;
+    ignoreModelValues = ignoreModelValues || false;
+
     if (options.folder) {
       if (!skipValidation) { VerifyRequiredValues(options.folder, values) };
-      options.body = CreateRequestBody(options.folder, values);
+      if (!ignoreModelValues) { NormalizeObjectKeys(options.folder, this.FLATTENED_VALUES); }
+      options.body = CreateRequestBody(options.folder, this.ALL_VALUES, ignoreModelValues);
       delete options.folder;
     } else if (options.body) {
       if (!skipValidation) { VerifyRequiredValues(options.body, values) };
+      if (!ignoreModelValues) { NormalizeObjectKeys(options.body, this.FLATTENED_VALUES); }
     } else if (options) {
+      console.log("HERE!");
+      console.log(ignoreModelValues);
       if (!skipValidation) { VerifyRequiredValues(options, values) };
-      options.body = CreateRequestBody(options, values);
+      if (!ignoreModelValues) { NormalizeObjectKeys(options, this.FLATTENED_VALUES); }
+      console.log(options);
+      options.body = CreateRequestBody(options, this.ALL_VALUES, ignoreModelValues);
     } else {
-      values = values || this.ALL_REQUIRED_VALUES;
+      values = values || this.ALL_VALUES;
       let requiredValuesString = values.join(', ');
-      throw new Error(`The following values are required: ${requiredValuesString}`);
+      throw new Error(`Please select from the following fields when making this API call: ${requiredValuesString}`);
     }
   }
 
@@ -90,9 +118,13 @@ export default class Folders {
 
   create(options) {
     options = options || {};
-    options.skipValidation = options.skipValidation || false;
-    this._getFolder(options, this.ALL_REQUIRED_VALUES, options.skipValidation);
-    delete options.skipValidation;
+    if (!this.client._simpleMode) {
+      const REQUIRED_VALUES = [MODEL_VALUES.PARENT, MODEL_VALUES.ID, MODEL_VALUES.NAME];
+      let skipValidation = InvestigateModes(options, BOX_CONSTANTS.MODES.SKIP_VALIDATION) || false;
+      let ignoreModelValues = InvestigateModes(options, BOX_CONSTANTS.MODES.IGNORE_MODEL_VALUES) || false;
+
+      this._getFolder(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
+    }
     let apiPath = `${BASE_PATH}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
     return this.client.makeRequest(apiPath, options);
@@ -100,10 +132,13 @@ export default class Folders {
 
   update(options) {
     options = options || {};
-    options.skipValidation = options.skipValidation || false;
     let folderId = this._getFolderId(options);
-    this._getFolder(options, [], options.skipValidation);
-    delete options.skipValidation;
+    if (!this.client._simpleMode) {
+      let skipValidation = InvestigateModes(options, BOX_CONSTANTS.MODES.SKIP_VALIDATION) || false;
+      let ignoreModelValues = InvestigateModes(options, BOX_CONSTANTS.MODES.IGNORE_MODEL_VALUES) || false;
+
+      this._getFolder(options, [], skipValidation, ignoreModelValues);
+    }
     let apiPath = `${BASE_PATH}/${folderId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
     return this.client.makeRequest(apiPath, options);
@@ -111,19 +146,18 @@ export default class Folders {
 
   copy(options) {
     options = options || {};
-    options.skipValidation = options.skipValidation || false;
     let folderId = this._getFolderId(options);
-    this._getFolder(options, [REQUIRED_VALUES.PARENT, REQUIRED_VALUES.ID], options.skipValidation);
-    delete options.skipValidation;
+    if (!this.client._simpleMode) {
+      let skipValidation = InvestigateModes(options, BOX_CONSTANTS.MODES.SKIP_VALIDATION) || false;
+      let ignoreModelValues = InvestigateModes(options, BOX_CONSTANTS.MODES.IGNORE_MODEL_VALUES) || false;
 
-    if (options.name) {
-      options.body.name = options.name;
-      delete options.name;
-    } else if (options.newName) {
-      options.body.name = options.newName;
-      delete options.newName;
+      this._getFolder(options, [REQUIRED_VALUES.PARENT, REQUIRED_VALUES.ID], skipValidation, ignoreModelValues);
+
+      if (options.newName) {
+        options.body.name = options.newName;
+        delete options.newName;
+      }
     }
-
     let apiPath = `${BASE_PATH}/${folderId}/copy`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
     return this.client.makeRequest(apiPath, options);
@@ -132,15 +166,25 @@ export default class Folders {
   createSharedLink(options) {
     options = options || {};
     options.body = options.body || {};
+    options.body.shared_link = options.body.shared_link || {};
     let folderId = this._getFolderId(options);
+    if (!this.client._simpleMode) {
+      let skipValidation = InvestigateModes(options, BOX_CONSTANTS.MODES.SKIP_VALIDATION) || false;
+      let ignoreModelValues = InvestigateModes(options, BOX_CONSTANTS.MODES.IGNORE_MODEL_VALUES) || false;
 
-    if (options.shared_link) {
-      options.body.shared_link = options.shared_link;
-      delete options.shared_link;
-    } else {
-      options.body.shared_link = options.body.shared_link || {};
+      if (!ignoreModelValues) { NormalizeObjectKeys(options, this.FLATTENED_VALUES); }
+      if (!skipValidation) {
+        if (options[MODEL_VALUES.SHARED_LINK]) {
+          options.body[MODEL_VALUES.SHARED_LINK] = options[MODEL_VALUES.SHARED_LINK];
+          delete options[MODEL_VALUES.SHARED_LINK];
+        }
+
+        if (options[MODEL_VALUES.PERMISSIONS]) {
+          options.body[MODEL_VALUES.PERMISSIONS] = options[MODEL_VALUES.PERMISSIONS];
+          delete options[MODEL_VALUES.PERMISSIONS];
+        }
+      }
     }
-
     let apiPath = `${BASE_PATH}/${folderId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
     return this.client.makeRequest(apiPath, options);
@@ -148,12 +192,13 @@ export default class Folders {
 
   restore(options) {
     options = options || {};
-    options.skipValidation = options.skipValidation || false;
     let folderId = this._getFolderId(options);
+    if (!this.client._simpleMode) {
+      let skipValidation = InvestigateModes(options, BOX_CONSTANTS.MODES.SKIP_VALIDATION) || false;
+      let ignoreModelValues = InvestigateModes(options, BOX_CONSTANTS.MODES.IGNORE_MODEL_VALUES) || false;
 
-    this._getFolder(options, [], options.skipValidation);
-    delete options.skipValidation;
-
+      this._getFolder(options, [], skipValidation, ignoreModelValues);
+    }
     let apiPath = `${BASE_PATH}/${folderId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
     return this.client.makeRequest(apiPath, options);
