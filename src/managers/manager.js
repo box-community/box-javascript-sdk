@@ -7,10 +7,20 @@ import NormalizeObjectKeys from '../util/normalize-object-keys';
 import VerifyRequiredValues from '../util/verify-required-values';
 import CreateRequestBody from '../util/create-request-body';
 
+const MODEL_VALUES = {
+  SHARED_LINK: 'shared_link',
+  SHARED_LINK_ACCESS: 'shared_link.access',
+  UNSHARED_AT: 'shared_link.unshared_at',
+  PERMISSIONS: 'shared_link.permissions',
+  CAN_DOWNLOAD: 'shared_link.permissions.can_download',
+  CAN_PREVIEW: 'shared_link.permissions.can_preview'
+}
+
 export default class Manager {
-  constructor(values) {
-    this.ALL_VALUES = MapValues(values);
-    this.FLATTENED_VALUES = FlattenDotProps(this.ALL_VALUES);
+  constructor(client, values) {
+    this.client = client;
+    this.ALL_VALUES = (values) ? MapValues(values) : null;
+    this.FLATTENED_VALUES = (this.ALL_VALUES) ? FlattenDotProps(this.ALL_VALUES) : null;
   }
 
   _getModel(options, values, skipValidation, ignoreModelValues) {
@@ -51,7 +61,7 @@ export default class Manager {
   _getTemplateKey(options) {
     let templateKey = '';
     if (options.template && options.template !== '') {
-      templateKey = (options.template.key !== '') ? options.template.key || options.template;
+      templateKey = (options.template.key !== '') ? options.template.key : options.template;
       delete options.template;
     } else if (options.templateKey || options.template_key) {
       templateKey = options.templateKey || options.template_key;
@@ -72,5 +82,27 @@ export default class Manager {
 
   _setIgnoreModelValues(options) {
     return InvestigateModes(options, BOX_CONSTANTS.MODES.IGNORE_MODEL_VALUES) || false;
+  }
+
+  _createSharedLink(options, id, BASE_PATH, FLATTENED_VALUES) {
+    options = options || {};
+    options.body = options.body || {};
+    options.body.shared_link = options.body.shared_link || {};
+
+    if (!this.client._simpleMode) {
+      let skipValidation = this._setSkipValidation(options);
+      let ignoreModelValues = this._setIgnoreModelValues(options);
+
+      if (!ignoreModelValues) { NormalizeObjectKeys(options, FLATTENED_VALUES); }
+      if (!skipValidation) {
+        if (options[MODEL_VALUES.SHARED_LINK]) {
+          options.body[MODEL_VALUES.SHARED_LINK] = options[MODEL_VALUES.SHARED_LINK];
+          delete options[MODEL_VALUES.SHARED_LINK];
+        }
+      }
+    }
+    let apiPath = `${BASE_PATH}/${id}`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
+    return this.client.makeRequest(apiPath, options);
   }
 }

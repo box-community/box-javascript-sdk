@@ -15,9 +15,9 @@ const MODEL_VALUES = {
   SHARED_LINK_ACCESS: 'shared_link.access',
   UNSHARED_AT: 'shared_link.unshared_at',
   PASSWORD: 'shared_link.password',
-  PERMISSIONS: 'permissions',
-  CAN_DOWNLOAD: 'permissions.can_download',
-  CAN_PREVIEW: 'permissions.can_preview',
+  PERMISSIONS: 'shared_link.permissions',
+  CAN_DOWNLOAD: 'shared_link.permissions.can_download',
+  CAN_PREVIEW: 'shared_link.permissions.can_preview',
   FOLDER_UPLOAD_EMAIL: 'folder_upload_email',
   FOLDER_UPLOAD_EMAIL_ACCESS: 'folder_upload_email.access',
   OWNED_BY: 'owned_by',
@@ -28,8 +28,8 @@ const MODEL_VALUES = {
 
 export default class Folders extends Manager {
   constructor(client) {
-    super(MODEL_VALUES);
-    this.client = client;
+    super(client, MODEL_VALUES);
+    console.log(this.client);
   }
 
   _getFolderId(options) {
@@ -178,29 +178,8 @@ export default class Folders extends Manager {
 
   createSharedLink(options) {
     options = options || {};
-    options.body = options.body || {};
-    options.body.shared_link = options.body.shared_link || {};
     let folderId = this._getFolderId(options);
-    if (!this.client._simpleMode) {
-      let skipValidation = super._setSkipValidation(options);
-      let ignoreModelValues = super._setIgnoreModelValues(options);
-
-      if (!ignoreModelValues) { NormalizeObjectKeys(options, this.FLATTENED_VALUES); }
-      if (!skipValidation) {
-        if (options[MODEL_VALUES.SHARED_LINK]) {
-          options.body[MODEL_VALUES.SHARED_LINK] = options[MODEL_VALUES.SHARED_LINK];
-          delete options[MODEL_VALUES.SHARED_LINK];
-        }
-
-        if (options[MODEL_VALUES.PERMISSIONS]) {
-          options.body[MODEL_VALUES.PERMISSIONS] = options[MODEL_VALUES.PERMISSIONS];
-          delete options[MODEL_VALUES.PERMISSIONS];
-        }
-      }
-    }
-    let apiPath = `${BASE_PATH}/${folderId}`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
-    return this.client.makeRequest(apiPath, options);
+    return super._createSharedLink(options, folderId, BASE_PATH, this.FLATTENED_VALUES);
   }
 
   restore(options) {

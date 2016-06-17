@@ -97,7 +97,7 @@ export default class BasicBoxClient {
 
   _checkForEmptyObjects(options) {
     Object.keys(options).map((field) => {
-      if(this._isEmpty(options[field])) {
+      if (this._isEmpty(options[field])) {
         delete options[field];
       }
     });
@@ -114,7 +114,7 @@ export default class BasicBoxClient {
 
   _applyFields(options) {
     options.params = options.params || {};
-    if(options.fields) {
+    if (options.fields) {
       options.params.fields = options.fields;
       delete options.fields;
     }
@@ -126,11 +126,10 @@ export default class BasicBoxClient {
     options.url = options.url || `${this._baseApiUrl}${path}`;
     options.headers = this._handleAuthorization(options);
     options.params = this._applyFields(options);
-    
+    this._checkForEmptyObjects(options);
     if (this._returnsOnlyOptions) {
       return options;
     }
-    this._checkForEmptyObjects(options);
     return BoxHttp(options);
   }
 

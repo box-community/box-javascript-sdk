@@ -1,12 +1,44 @@
 'use strict';
 import BOX_CONSTANTS from '../config/box-constants';
+import VerifyRequiredValues from '../util/verify-required-values';
+import CreateRequestBody from '../util/create-request-body';
+import NormalizeObjectKeys from '../util/normalize-object-keys';
+import Manager from './manager';
+
 const BASE_PATH = '/files';
 const LOCK = 'lock';
-const UPLOAD_PATH = 'https://upload.box.com/api/2.0/files/content';
+const UPLOAD_PATH = 'https://upload.box.com/api/2.0';
+const MODEL_VALUES = {
+  NAME: 'name',
+  PARENT: 'parent',
+  ID: 'parent.id',
+  DESCRIPTION: 'description',
+  SHARED_LINK: 'shared_link',
+  SHARED_LINK_ACCESS: 'shared_link.access',
+  UNSHARED_AT: 'shared_link.unshared_at',
+  PERMISSIONS: 'shared_link.permissions',
+  CAN_DOWNLOAD: 'shared_link.permissions.can_download',
+  CAN_PREVIEW: 'shared_link.permissions.can_preview',
+  FOLDER_UPLOAD_EMAIL: 'folder_upload_email',
+  FOLDER_UPLOAD_EMAIL_ACCESS: 'folder_upload_email.access',
+  OWNED_BY: 'owned_by',
+  OWNED_BY_ID: 'owned_by.id',
+  SYNC_STATE: 'sync_state',
+  TAGS: 'tags'
+}
 
-export default class Files {
+const DIMENSION_VALUES = {
+  MIN_HEIGHT: 'min_height',
+  MAX_HEIGHT: 'max_height',
+  MIN_WIDTH: 'min_width',
+  MAX_WIDTH: 'max_width'
+}
+
+const DIMENSIONS = Object.keys(DIMENSION_VALUES).map((key) => { return DIMENSION_VALUES[key]; });
+
+export default class Files extends Manager {
   constructor(client) {
-    this.client = client;
+    super(client, MODEL_VALUES);
   }
 
   _getFileId(options) {
@@ -36,6 +68,20 @@ export default class Files {
       throw new Error("A versionId or id field is requried for this API call.")
     }
     return versionId;
+  }
+
+  _getFile(options, values, skipValidation, ignoreModelValues) {
+    skipValidation = skipValidation || this.client.skipValidation || false;
+    ignoreModelValues = ignoreModelValues || false;
+
+    if (options.file) {
+      if (!skipValidation) { VerifyRequiredValues(options.file, values) };
+      if (!ignoreModelValues) { NormalizeObjectKeys(options.file, this.FLATTENED_VALUES); }
+      options.body = CreateRequestBody(options.file, this.ALL_VALUES, ignoreModelValues);
+      delete options.file;
+    } else {
+      super._getModel(options, values, skipValidation, ignoreModelValues);
+    }
   }
 
   get(options) {
@@ -68,10 +114,18 @@ export default class Files {
   // Need to implement your own server endpoint
   // and upload on behalf of the user.
   upload(options) {
-    options.url = UPLOAD_PATH;
+    options = options || {};
+    options.url = options.url || `${UPLOAD_PATH}/files/content`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
     options.upload = true;
     return this.client.makeRequest(null, options);
+  }
+
+  update(options) {
+    options = options || {};
+    let fileId = this._getFileId(options);
+    options.url = options.url || `${UPLOAD_PATH}/${fileId}/content`;
+    this.upload(options);
   }
 
   getComments(options) {
@@ -112,12 +166,6 @@ export default class Files {
   }
 
   getThumbnail(options) {
-    const MIN_HEIGHT = 'min_height';
-    const MAX_HEIGHT = 'max_height';
-    const MIN_WIDTH = 'min_width';
-    const MAX_WIDTH = 'max_width';
-    const DIMENSIONS = [MIN_HEIGHT, MAX_HEIGHT, MIN_WIDTH, MAX_WIDTH];
-
     options = options || {};
     options.extension = options.extension || '.png';
     options.params = options.params || {};
@@ -147,19 +195,8 @@ export default class Files {
 
   createSharedLink(options) {
     options = options || {};
-    options.body = options.body || {};
     let fileId = this._getFileId(options);
-
-    if (options.shared_link) {
-      options.body.shared_link = options.shared_link;
-      delete options.shared_link;
-    } else {
-      options.body.shared_link = options.body.shared_link || {};
-    }
-
-    let apiPath = `${BASE_PATH}/${fileId}`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
-    return this.client.makeRequest(apiPath, options);
+    return super._createSharedLink(options, fileId, BASE_PATH, this.FLATTENED_VALUES);
   }
 
   promoteVersion(options) {
@@ -212,14 +249,13 @@ export default class Files {
 
   updateInfo(options) {
     options = options || {};
-    options.body = options.body || {};
     let fileId = this._getFileId(options);
+    if (!this.client._simpleMode) {
+      let skipValidation = super._setSkipValidation(options);
+      let ignoreModelValues = super._setIgnoreModelValues(options);
 
-    if (options.file) {
-      options.body = options.file;
-      delete options.file;
+      this._getFile(options, [], skipValidation, ignoreModelValues);
     }
-
     let apiPath = `${BASE_PATH}/${fileId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
     return this.client.makeRequest(apiPath, options);
