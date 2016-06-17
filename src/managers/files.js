@@ -2,7 +2,7 @@
 import BOX_CONSTANTS from '../config/box-constants';
 const BASE_PATH = '/files';
 const LOCK = 'lock';
-// const UPLOAD_PATH = 'https://upload.box.com/api/2.0/files/content';
+const UPLOAD_PATH = 'https://upload.box.com/api/2.0/files/content';
 
 export default class Files {
   constructor(client) {
@@ -67,11 +67,12 @@ export default class Files {
   // Currently not possible due to CORS
   // Need to implement your own server endpoint
   // and upload on behalf of the user.
-  // upload(options) {
-  //   options.url = UPLOAD_PATH;
-  //   options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
-  //   return this.client.makeRequest(null, options);
-  // }
+  upload(options) {
+    options.url = UPLOAD_PATH;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
+    options.upload = true;
+    return this.client.makeRequest(null, options);
+  }
 
   getComments(options) {
     options = options || {};

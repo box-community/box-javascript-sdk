@@ -126,10 +126,11 @@ export default class BasicBoxClient {
     options.url = options.url || `${this._baseApiUrl}${path}`;
     options.headers = this._handleAuthorization(options);
     options.params = this._applyFields(options);
-    this._checkForEmptyObjects(options);
+    
     if (this._returnsOnlyOptions) {
       return options;
     }
+    this._checkForEmptyObjects(options);
     return BoxHttp(options);
   }
 

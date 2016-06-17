@@ -21,9 +21,10 @@ export default function BoxHttp(options) {
       });
     }
 
-    if (options.body && typeof options.body === 'object') {
+    if (options.body && typeof options.body === 'object' && !Object.prototype.toString.call(options.body) === '[object FormData]') {
       client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       client.send(JSON.stringify(options.body));
+
     } else if (options.body) {
       client.send(options.body);
     } else {
@@ -43,6 +44,7 @@ export default function BoxHttp(options) {
         reject(error);
       }
     };
+
     client.onerror = function () {
       let error = {
         statusText: this.statusText,
