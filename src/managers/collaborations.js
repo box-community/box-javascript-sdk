@@ -2,44 +2,48 @@
 import BOX_CONSTANTS from '../config/box-constants';
 import VerifyRequiredValues from '../util/verify-required-values';
 import CreateRequestBody from '../util/create-request-body';
-import InvestigateModes from '../util/investigate-modes';
 import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
 
-const BASE_PATH = '/comments';
+const BASE_PATH = '/collaborations';
 const MODEL_VALUES = {
+  NOTIFY: 'notify',
   ITEM: 'item',
   ITEM_TYPE: 'item.type',
   ITEM_ID: 'item.id',
-  TAGGED_MESSAGE: 'tagged_message',
-  MESSAGE: 'message'
-}
+  ACCESSIBLE_BY: 'accessible_by',
+  ACCESSIBLE_BY_ID: 'accessible_by.id',
+  ACCESSIBLE_BY_TYPE: 'accessible_by.type',
+  ACCESSIBLE_BY_LOGIN: 'accessible_by.login',
+  ROLE: 'role'
+};
 
-export default class Comments extends Manager {
+
+export default class Collaborations extends Manager {
   constructor(client) {
     super(client, MODEL_VALUES);
   }
 
-  _getCommentId(options) {
+  _getCollaborationId(options) {
     let id = super._getId(options);
-    if (options.commentId || options.comment_id) {
-      id = options.commentId || options.comment_id;
-      (options.commentId) ? delete options.commentId : delete options.comment_id;
-    } else if (options.comment && options.comment.id) {
-      id = options.comment.id;
+    if (options.collaborationId || options.collaboration_id) {
+      id = options.collaborationId || options.collaboration_id;
+      (options.collaborationId) ? delete options.collaborationId : delete options.collaboration_id;
+    } else if (options.collaboration && options.collaboration.id) {
+      id = options.collaboration.id;
     }
     super._testForMissingId(id);
     return id;
   }
 
-  _getComment(options, values, skipValidation, ignoreModelValues) {
+  _getCollaboration(options, values, skipValidation, ignoreModelValues) {
     skipValidation = skipValidation || this.client.skipValidation || false;
     ignoreModelValues = ignoreModelValues || false;
-    if (options.comment) {
-      if (!skipValidation) { VerifyRequiredValues(options.comment, values) };
-      if (!ignoreModelValues) { NormalizeObjectKeys(options.comment, this.FLATTENED_VALUES); }
+    if (options.collaboration) {
+      if (!skipValidation) { VerifyRequiredValues(options.collaboration, values) };
+      if (!ignoreModelValues) { NormalizeObjectKeys(options.collaboration, this.FLATTENED_VALUES); }
       options.body = CreateRequestBody(options.comment, this.ALL_VALUES, ignoreModelValues);
-      delete options.comment;
+      delete options.collaboration;
     } else {
       super._getModel(options, values, skipValidation, ignoreModelValues);
     }
@@ -47,8 +51,8 @@ export default class Comments extends Manager {
 
   get(options) {
     options = options || {};
-    let commentId = this._getCommentId(options);
-    let apiPath = `${BASE_PATH}/${commentId}`;
+    let collaborationId = this._getCollaborationId(options);
+    let apiPath = `${BASE_PATH}/${collaborationId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
   }
@@ -56,11 +60,11 @@ export default class Comments extends Manager {
   create(options) {
     options = options || {};
     if (!this.client._simpleMode) {
-      const REQUIRED_VALUES = [MODEL_VALUES.ITEM, MODEL_VALUES.ITEM_ID, MODEL_VALUES.ITEM_TYPE];
+      const REQUIRED_VALUES = [MODEL_VALUES.ITEM, MODEL_VALUES.ITEM_ID, MODEL_VALUES.ITEM_TYPE, MODEL_VALUES.ACCESSIBLE_BY, MODEL_VALUES.ROLE];
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
 
-      this._getComment(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
+      this._getCollaboration(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
     }
     let apiPath = `${BASE_PATH}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
@@ -69,22 +73,22 @@ export default class Comments extends Manager {
 
   update(options) {
     options = options || {};
-    let commentId = this._getCommentId(options);
+    let collaborationId = this._getCollaborationId(options);
     if (!this.client._simpleMode) {
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
 
-      this._getComment(options, [MODEL_VALUES.MESSAGE], skipValidation, ignoreModelValues);
+      this._getCollaboration(options, [], skipValidation, ignoreModelValues);
     }
-    let apiPath = `${BASE_PATH}/${commentId}`;
+    let apiPath = `${BASE_PATH}/${collaborationId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
     return this.client.makeRequest(apiPath, options);
   }
 
   delete(options) {
     options = options || {};
-    let commentId = this._getCommentId(options);
-    let apiPath = `${BASE_PATH}/${commentId}`;
+    let collaborationId = this._getCollaborationId(options);
+    let apiPath = `${BASE_PATH}/${collaborationId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;
     return this.client.makeRequest(apiPath, options);
   }

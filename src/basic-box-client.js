@@ -3,6 +3,13 @@ import BoxHttp from './box-http';
 import Folders from './managers/folders';
 import Files from './managers/files';
 import WebLinks from './managers/web-links';
+import Collaborations from './managers/collaborations';
+import Collections from './managers/collections';
+import Comments from './managers/comments';
+import Groups from './managers/groups';
+import Metadata from './managers/metadata';
+import Tasks from './managers/tasks';
+import Users from './managers/users';
 import BOX_CONSTANTS from './config/box-constants'
 
 export default class BasicBoxClient {
@@ -12,6 +19,13 @@ export default class BasicBoxClient {
     this._folders = new Folders(this);
     this._files = new Files(this);
     this._webLinks = new WebLinks(this);
+    this._collaborations = new Collaborations(this);
+    this._collections = new Collections(this);
+    this._comments = new Comments(this);
+    this._groups = new Groups(this);
+    this._metadata = new Metadata(this);
+    this._tasks = new Tasks(this);
+    this._users = new Users(this);
     this._accessToken = this._checkTokenType(config);
     this._hasStoredAccessToken = (this._accessToken) ? true : false;
     this._returnsOnlyOptions = (config.noRequestMode && config.noRequestMode === true) ? true : false;
@@ -29,6 +43,34 @@ export default class BasicBoxClient {
 
   get webLinks() {
     return this._webLinks;
+  }
+
+  get collaborations() {
+    return this._collaborations;
+  }
+
+  get collections() {
+    return this._collections;
+  }
+
+  get comments() {
+    return this._comments;
+  }
+
+  get groups() {
+    return this._groups;
+  }
+
+  get metadata() {
+    return this._metadata;
+  }
+
+  get tasks() {
+    return this._tasks;
+  }
+
+  get users() {
+    return this._users;
   }
 
   get accessToken() {
@@ -133,7 +175,7 @@ export default class BasicBoxClient {
     return BoxHttp(options);
   }
 
-  revokeAuthAndRerunRequest(options, accessToken, setAsNewAccessToken) {
+  removeAccessTokenAndRerunRequest(options, accessToken, setAsNewAccessToken) {
     setAsNewAccessToken = setAsNewAccessToken || false;
     if (options.setAsNewAccessToken) {
       setAsNewAccessToken = options.setAsNewAccessToken;

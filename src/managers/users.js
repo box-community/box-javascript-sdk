@@ -1,31 +1,27 @@
 'use strict';
 import BOX_CONSTANTS from '../config/box-constants';
 import VerifyRequiredValues from '../util/verify-required-values';
-import CreateRequestBody from '../util/create-request-body';
 import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
 
-const BASE_PATH = '/metadata_templates';
+const BASE_PATH = '/users';
 const MODEL_VALUES = {}
 
-export default class Metadata extends Manager {
+export default class Users extends Manager {
   constructor(client) {
     super(client, MODEL_VALUES);
   }
 
-  get(options) {
+  getCurrentUser(options) {
     options = options || {};
-    let scope = super._getScope(options);
-    let templateKey = super._getTemplateKey(options);
-    let apiPath = `${BASE_PATH}/${scope}/${templateKey}/schema`;
+    let apiPath = `${BASE_PATH}/me`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
   }
 
-  getTemplates(options) {
+  getGroupMemberships(options) {
     options = options || {};
-    let scope = super._getScope(options);
-    let apiPath = `${BASE_PATH}/${scope}`;
+    let apiPath = `${BASE_PATH}/${userId}/memberships`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
   }

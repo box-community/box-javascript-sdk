@@ -29,7 +29,6 @@ const MODEL_VALUES = {
 export default class Folders extends Manager {
   constructor(client) {
     super(client, MODEL_VALUES);
-    console.log(this.client);
   }
 
   _getFolderId(options) {
@@ -180,6 +179,20 @@ export default class Folders extends Manager {
     options = options || {};
     let folderId = this._getFolderId(options);
     return super._createSharedLink(options, folderId, BASE_PATH, this.FLATTENED_VALUES);
+  }
+
+  updateCollections(options) {
+    options = options || {};
+    let folderId = this._getFolderId(options);
+
+    if (options.collections) {
+      options.body.collections = options.collections;
+      delete options.collections;
+    }
+
+    let apiPath = `${BASE_PATH}/${folderId}`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
+    return this.client.makeRequest(apiPath, options);
   }
 
   restore(options) {

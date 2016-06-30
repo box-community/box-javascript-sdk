@@ -110,9 +110,6 @@ export default class Files extends Manager {
   //   return this.client.makeRequest(apiPath, options);
   // }
 
-  // Currently not possible due to CORS
-  // Need to implement your own server endpoint
-  // and upload on behalf of the user.
   upload(options) {
     options = options || {};
     options.url = options.url || `${UPLOAD_PATH}/files/content`;
