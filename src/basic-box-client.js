@@ -139,7 +139,7 @@ export default class BasicBoxClient {
 
   _checkForEmptyObjects(options) {
     Object.keys(options).map((field) => {
-      if (this._isEmpty(options[field])) {
+      if (field !== "body" && this._isEmpty(options[field])) {
         delete options[field];
       }
     });

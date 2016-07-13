@@ -8,8 +8,4 @@ export default class SDK {
   get BasicBoxClient() {
     return this._BasicBoxClient;
   }
-
-  math() {
-    return 2 * 2;
-  }
 }
