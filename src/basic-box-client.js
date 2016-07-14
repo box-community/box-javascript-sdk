@@ -110,7 +110,11 @@ export default class BasicBoxClient {
   }
 
   _handleAuthorization(options, accessToken) {
-    if (this._hasStoredAccessToken) {
+    if (options && options.accessToken || options.access_token) {
+      let accessToken = options.accessToken || options.access_token;
+      (options.accessToken) ? delete options.accessToken : delete options.access_token;
+      return this._constructHeaders(options, accessToken);
+    } else if (this._hasStoredAccessToken) {
       return this._constructHeaders(options, this._accessToken);
     } else if (accessToken) {
       return this._constructHeaders(options, accessToken);
