@@ -21,7 +21,7 @@ export default function BoxHttp(options) {
       });
     }
 
-    if (options.body && typeof options.body === 'object' && !Object.prototype.toString.call(options.body) === '[object FormData]') {
+    if (options.body && typeof options.body === 'object' && Object.prototype.toString.call(options.body) !== '[object FormData]') {
       client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       client.send(JSON.stringify(options.body));
 
