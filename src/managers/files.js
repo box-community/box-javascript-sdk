@@ -42,7 +42,7 @@ export default class Files extends Manager {
   }
 
   _getFileId(options) {
-    let fileId;
+    let fileId = super._getId(options);
     if (options.fileId) {
       fileId = options.fileId;
       delete options.fileId;

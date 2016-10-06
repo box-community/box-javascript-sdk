@@ -1,8 +1,7 @@
 'use strict';
 export default function NormalizeObjectKeys(options, values) {
-  console.log("Normalizing!!!");
   values = values || [];
-  
+
   Object.keys(options).map((key) => {
     if (values.indexOf(key) !== -1) {
       return;
@@ -12,7 +11,7 @@ export default function NormalizeObjectKeys(options, values) {
     }
 
     let splitCamel = key.split(/(?=[A-Z])/g);
-    
+
     if (splitCamel.length > 1) {
       let regroup = [];
       for (var i = 1; i < splitCamel.length; i++) {
@@ -22,7 +21,7 @@ export default function NormalizeObjectKeys(options, values) {
       let newKey = regroup.join('_');
 
       if (values.indexOf(newKey) !== -1) {
-        console.log("Replacing camelcase key!" + newKey);
+
         options[newKey] = options[key];
         delete options[key];
       }
