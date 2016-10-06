@@ -18,13 +18,11 @@ var box = new BoxSdk();
 ```
 
 ## Access Token Details
-Once you have the base SDK object, you can call the `BasicBoxClient` constructor and pass in a Box access token appropriate for use on a clientside application.
+Once you have the base SDK object, you can call the `BasicBoxClient` or `PersistentBoxClient` constructor for calling Box APIs within a clientside application.
 
 For building on Box Platform with App Users this would be an individual's access token. You should never pass the Enterprise token to the client for any reason.
 
 The Box Clientside SDK does not handle any authentication and only accepts an access token. Authentication should be handled with your application server, a serverless API gateway and lambda service, a service like Okta or Auth0, or some combination of these.
-
-Currently the SDK does not handle token refreshing automatically. Instead, when a call encounters an error, the error handler within the SDK passes the entire `options` object for the failed call so you can programmatically handle the error retry logic within your clientside application.
 
 ## BasicBoxClient
 The `BoxSdk` object can create a new `BasicBoxClient`. When creating a new `BasicBoxClient`, you can pass in several options in a configuration object.
@@ -34,6 +32,14 @@ var client = new box.BasicBoxClient({accessToken: "1234554321"});
 ```
 
 ## PersistentBoxClient
+You can register a callback accessTokenHandler function with the `PersistentBoxClient` type if you have your own API endpoint to generate App User tokens. You should only use the `PersistentBoxClient` if you can create an API endpoint for generating Box App User tokens that is inaccessible to unauthorized users. 
+
+To create your own service for generating App User tokens, you can utilize an identity provider service like [Auth0](https://auth0.com) for example. Auth0 has a service called [webtask](https://webtask.io/) that you can write a secured lambda microservice that can generate a Box App User token using Auth0's [id_token](https://auth0.com/docs/tokens/id_token) to secure the API endpoint webtask provides.
+
+Additionally, Auth0 has a [guide](https://auth0.com/docs/integrations/aws-api-gateway) for implementing similar microservices within AWS.
+
+Auth0 is not a requirement for this SDK and is only listed to give an example. Any identity provider service that can aid in securing your own REST API for generating Box App User tokens should be sufficient.  
+
 The `BoxSdk` object can create a new `PersistentBoxClient`. You can register a Promise or callback that resolves to an access token and keep your `PersistentBoxClient` authorized to make calls to the Box API.
 ### Examples of Valid `accessTokenHandlers`
 ```javascript
