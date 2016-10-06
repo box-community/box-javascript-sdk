@@ -31,18 +31,6 @@ export default class Folders extends Manager {
     super(client, MODEL_VALUES);
   }
 
-  _getFolderId(options) {
-    let folderId = super._getId(options);
-    if (options.folderId || options.folder_id) {
-      folderId = options.folderId || options.folder_id;
-      (options.folderId) ? delete options.folderId : delete options.folder_id;
-    } else if (options.folder && options.folder.id) {
-      folderId = options.folder.id;
-    }
-    super._testForMissingId(folderId);
-    return folderId;
-  }
-
   _getFolder(options, values, skipValidation, ignoreModelValues) {
     skipValidation = skipValidation || this.client.skipValidation || false;
     ignoreModelValues = ignoreModelValues || false;
@@ -59,7 +47,7 @@ export default class Folders extends Manager {
 
   get(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     let apiPath = `${BASE_PATH}/${folderId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
@@ -67,7 +55,7 @@ export default class Folders extends Manager {
 
   getItems(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     let apiPath = `${BASE_PATH}/${folderId}/items`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
@@ -75,7 +63,7 @@ export default class Folders extends Manager {
 
   getCollaborations(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     let apiPath = `${BASE_PATH}/${folderId}/collaborations`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
@@ -90,29 +78,9 @@ export default class Folders extends Manager {
 
   getTrashedFile(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
 
     let apiPath = `${BASE_PATH}/${folderId}/trash`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
-    return this.client.makeRequest(apiPath, options);
-  }
-
-  getMetadata(options) {
-    options = options || {};
-    let folderId = this._getFolderId(options);
-    let scope = super._getScope(options);
-    let templateKey = super._getTemplateKey(options);
-
-    let apiPath = `${BASE_PATH}/${folderId}/metadata/${scope}/${templateKey}`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
-    return this.client.makeRequest(apiPath, options);
-  }
-
-  getAllMetadata(options) {
-    options = options || {};
-    let folderId = this._getFolderId(options);
-
-    let apiPath = `${BASE_PATH}/${folderId}/metadata`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
   }
@@ -131,20 +99,9 @@ export default class Folders extends Manager {
     return this.client.makeRequest(apiPath, options);
   }
 
-  createMetadata(options) {
-    options = options || {};
-    let folderId = this._getFolderId(options);
-    let scope = super._getScope(options);
-    let templateKey = super._getTemplateKey(options);
-
-    let apiPath = `${BASE_PATH}/${folderId}/metadata/${scope}/${templateKey}`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
-    return this.client.makeRequest(apiPath, options);
-  }
-
   update(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     if (!this.client._simpleMode) {
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
@@ -158,7 +115,7 @@ export default class Folders extends Manager {
 
   copy(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     if (!this.client._simpleMode) {
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
@@ -177,13 +134,13 @@ export default class Folders extends Manager {
 
   createSharedLink(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     return super._createSharedLink(options, folderId, BASE_PATH, this.FLATTENED_VALUES);
   }
 
   updateCollections(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
 
     if (options.collections) {
       options.body.collections = options.collections;
@@ -197,7 +154,7 @@ export default class Folders extends Manager {
 
   restore(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
     if (!this.client._simpleMode) {
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
@@ -213,27 +170,16 @@ export default class Folders extends Manager {
     options = options || {};
     options.params = options.params || {};
     options.params.recursive = options.params.recursive || true;
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
 
     let apiPath = `${BASE_PATH}/${folderId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;
     return this.client.makeRequest(apiPath, options);
   }
 
-  deleteMetadata(options) {
-    options = options || {};
-    let folderId = this._getFolderId(options);
-    let scope = super._getScope(options);
-    let templateKey = super._getTemplateKey(options);
-
-    let apiPath = `${BASE_PATH}/${folderId}/metadata/${scope}/${templateKey}`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;
-    return this.client.makeRequest(apiPath, options);
-  }
-
   permanentlyDelete(options) {
     options = options || {};
-    let folderId = this._getFolderId(options);
+    let folderId = super._getFolderId(options);
 
     let apiPath = `${BASE_PATH}/${folderId}/trash`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;

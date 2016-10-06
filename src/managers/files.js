@@ -41,32 +41,13 @@ export default class Files extends Manager {
     super(client, MODEL_VALUES);
   }
 
-  _getFileId(options) {
-    let fileId = super._getId(options);
-    if (options.fileId) {
-      fileId = options.fileId;
-      delete options.fileId;
-    } else if (options.file && options.file.id) {
-      fileId = options.file.id;
-    } else if (typeof options === 'string') {
-      fileId = options;
-    } else {
-      throw new Error('A fileId field is required for this API call.');
-    }
-    return fileId;
-  }
-
   _getVersionId(options) {
     let versionId;
-    if (options.id) {
-      versionId = options.id;
-      delete options.id;
-    } else if (options.versionId) {
-      versionId = options.versionId;
-      delete options.versionId;
-    } else {
-      throw new Error("A versionId or id field is requried for this API call.")
-    }
+    if (options.versionId || options.version_id) {
+      versionId = options.versionId || options.version_id;
+      (options.versionId) ? delete options.versionId : options.version_id; 
+    } 
+    super._testForMissingId(versionId, BOX_CONSTANTS.VERSION, BOX_CONSTANTS.VERSION_ID);
     return versionId;
   }
 
@@ -86,7 +67,7 @@ export default class Files extends Manager {
 
   get(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
@@ -103,7 +84,7 @@ export default class Files extends Manager {
   //     options.params.version = versionId;
   //   }
 
-  //   let fileId = this._getFileId(options);
+  //   let fileId = super._getFileId(options);
 
   //   let apiPath = `${BASE_PATH}/${fileId}/content`;
   //   options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -120,14 +101,14 @@ export default class Files extends Manager {
 
   update(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     options.url = options.url || `${UPLOAD_PATH}/${fileId}/content`;
     this.upload(options);
   }
 
   getComments(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}/comments`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
@@ -135,7 +116,7 @@ export default class Files extends Manager {
 
   getTasks(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}/tasks`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
@@ -143,7 +124,7 @@ export default class Files extends Manager {
 
   getEmbedLink(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     options.params = options.params || {};
     options.params.fields = 'expiring_embed_link';
@@ -155,7 +136,7 @@ export default class Files extends Manager {
 
   getVersions(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/versions`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -166,7 +147,7 @@ export default class Files extends Manager {
     options = options || {};
     options.extension = options.extension || '.png';
     options.params = options.params || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     Object.keys(options).map((key) => {
       if (DIMENSIONS.indexOf(key) !== -1) {
@@ -183,7 +164,7 @@ export default class Files extends Manager {
 
   getTrashedFile(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/trash`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -192,14 +173,14 @@ export default class Files extends Manager {
 
   createSharedLink(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     return super._createSharedLink(options, fileId, BASE_PATH, this.FLATTENED_VALUES);
   }
 
   promoteVersion(options) {
     options = options || {};
     options.body = options.body || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     if (!options.body.id) {
       let versionId = this._getVersionId(options);
@@ -216,7 +197,7 @@ export default class Files extends Manager {
   copy(options) {
     options = options || {};
     options.body = options.body || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     if (!options.body.parent && !options.body.parent.id) {
       options.body.parent = {};
@@ -246,7 +227,7 @@ export default class Files extends Manager {
 
   updateInfo(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     if (!this.client._simpleMode) {
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
@@ -261,7 +242,7 @@ export default class Files extends Manager {
   lock(options) {
     options = options || {};
     options.body = options.body || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     if (options[LOCK]) {
       options.body[LOCK] = options[LOCK];
@@ -280,7 +261,7 @@ export default class Files extends Manager {
   unlock(options) {
     options = options || {};
     options.body = options.body || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     if (options[LOCK]) {
       delete options[LOCK];
@@ -294,7 +275,7 @@ export default class Files extends Manager {
 
   restore(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     if (options.parent) {
       options.body = options.body || {};
@@ -315,7 +296,7 @@ export default class Files extends Manager {
 
   delete(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;
@@ -324,7 +305,7 @@ export default class Files extends Manager {
 
   deleteVersion(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
     let versionId = this._getVersionId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/versions/${versionId}`;
@@ -334,7 +315,7 @@ export default class Files extends Manager {
 
   permanentlyDelete(options) {
     options = options || {};
-    let fileId = this._getFileId(options);
+    let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/trash`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;

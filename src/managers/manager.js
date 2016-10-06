@@ -49,6 +49,30 @@ export default class Manager {
     return id;
   }
 
+  _getFolderId(options) {
+    let folderId = this._getId(options, true, idType, correctlyFormattedIdProp);
+    if (options.folderId || options.folder_id) {
+      folderId = options.folderId || options.folder_id;
+      (options.folderId) ? delete options.folderId : delete options.folder_id;
+    } else if (options.folder && options.folder.id) {
+      folderId = options.folder.id;
+    }
+    this._testForMissingId(folderId, BOX_CONSTANTS.FOLDER, BOX_CONSTANTS.FOLDER_ID);
+    return folderId;
+  }
+
+  _getFileId(options) {
+    let fileId = this._getId(options);
+    if (options.fileId || options.file_id) {
+      fileId = options.fileId || options.file_id;
+      (options.fileId) ? delete options.fileId : delete options.file_id;
+    } else if (options.file && options.file.id) {
+      fileId = options.file.id;
+    } 
+    this._testForMissingId(fileId, BOX_CONSTANTS.FILE, BOX_CONSTANTS.FILE_ID);
+    return fileId;
+  }
+
   _getScope(options) {
     let scope = 'enterprise';
     if (options.scope && options.scope !== '') {
@@ -70,9 +94,11 @@ export default class Manager {
     return templateKey;
   }
 
-  _testForMissingId(id) {
+  _testForMissingId(id, idType, correctlyFormattedIdProp) {
+    idType = idType || 'unknown';
+    correctlyFormattedIdProp = correctlyFormattedIdProp || 'unknown';
     if(id === '') {
-      throw new Error('An id field is required for this API call.');
+      throw new Error(`An ${idType} field is required for this API call. Please provide an object with a key formatted in this style: ${correctlyFormattedIdProp}`);
     }
   }
 

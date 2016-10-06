@@ -5,7 +5,6 @@ import Manager from './manager';
 const BASE_PATH = '/collections';
 const MODEL_VALUES = {};
 
-
 export default class Collections extends Manager {
   constructor(client) {
     super(client, MODEL_VALUES);
