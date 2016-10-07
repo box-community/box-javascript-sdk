@@ -67,6 +67,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
     } else if (typeof accessTokenHandler === 'function') {
       return new Promise((resolve, reject) => {
         return accessTokenHandler((err, token) => {
+          if (err) { reject(err); }
           if (token) {
             resolve(token);
           } else {
@@ -104,7 +105,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
     this._isTokenExpired = true;
 
     this._init = (config) => {
-      let token = (!super._isEmpty(config)) ? this._findAccessTokenOnConfig(config) : null;
+      let token = (!this._isEmpty(config)) ? this._findAccessTokenOnConfig(config) : null;
       if (token) {
         this.setAccessToken(token);
       } else {
@@ -159,8 +160,8 @@ export default class PersistentBoxClient extends BaseBoxClient {
           options = options || {};
           options.url = options.url || `${this._baseApiUrl}${path}`;
           options.headers = headers;
-          options.params = super._applyFields(options);
-          super._checkForEmptyObjects(options);
+          options.params = this._applyFields(options);
+          this._checkForEmptyObjects(options);
           if (this._returnsOnlyOptions) {
             if (options.upload) { delete options.upload; }
             return options;

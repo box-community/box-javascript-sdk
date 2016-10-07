@@ -12,9 +12,9 @@ export default class BasicBoxClient extends BaseBoxClient {
   makeRequest(path, options) {
     options = options || {};
     options.url = options.url || `${this._baseApiUrl}${path}`;
-    options.headers = super._handleAuthorization(options);
-    options.params = super._applyFields(options);
-    super._checkForEmptyObjects(options);
+    options.headers = this._handleAuthorization(options);
+    options.params = this._applyFields(options);
+    this._checkForEmptyObjects(options);
     if (this._returnsOnlyOptions) {
       if (options.upload) { delete options.upload; }
       return options;
@@ -40,7 +40,8 @@ export default class BasicBoxClient extends BaseBoxClient {
     this.removeAccessToken();
 
     if (setAsNewAccessToken) {
-      this._accessToken = accessToken;
+      this.removeAccessToken();
+      this._accessToken = this._checkTokenType(accessToken);
       this._hasStoredAccessToken = true;
     }
 

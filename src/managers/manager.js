@@ -50,7 +50,7 @@ export default class Manager {
   }
 
   _getFolderId(options) {
-    let folderId = this._getId(options, true, idType, correctlyFormattedIdProp);
+    let folderId = this._getId(options);
     if (options.folderId || options.folder_id) {
       folderId = options.folderId || options.folder_id;
       (options.folderId) ? delete options.folderId : delete options.folder_id;

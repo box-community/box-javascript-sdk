@@ -31,15 +31,6 @@ export default class BaseBoxClient {
     this._hasStoredAccessToken = (this._accessToken) ? true : false;
   }
 
-  get accessToken() {
-    return this._accessToken;
-  }
-
-  set accessToken(token) {
-    this._accessToken = super._checkTokenType(token);
-    this._hasStoredAccessToken = true;
-  }
-
   get folders() {
     return this._folders;
   }
@@ -108,14 +99,16 @@ export default class BaseBoxClient {
   }
 
   _handleAuthorization(options, accessToken) {
+    if (accessToken) {
+      return this._constructHeaders(options, accessToken);
+    }
+
     if (options && options.accessToken || options.access_token) {
       let accessToken = options.accessToken || options.access_token;
       (options.accessToken) ? delete options.accessToken : delete options.access_token;
       return this._constructHeaders(options, accessToken);
     } else if (this._hasStoredAccessToken) {
       return this._constructHeaders(options, this._accessToken);
-    } else if (accessToken) {
-      return this._constructHeaders(options, accessToken);
     } else {
       let token = this._checkTokenType(options, true);
       return this._constructHeaders(options, token);
