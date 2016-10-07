@@ -67,7 +67,7 @@ export default class Metadata extends Manager {
     options = options || {};
     let fileId = super._getFileId(options);
 
-    let apiPath = `${BASE_PATH_FILE_METADATA}/${folderId}/metadata`;
+    let apiPath = `${BASE_PATH_FILE_METADATA}/${fileId}/metadata`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
   }
