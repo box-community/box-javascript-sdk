@@ -50,7 +50,7 @@ export default class Collaborations extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let collaborationId = this._getCollaborationId(options);
     let apiPath = `${BASE_PATH}/${collaborationId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;

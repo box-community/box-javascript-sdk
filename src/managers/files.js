@@ -24,7 +24,8 @@ const MODEL_VALUES = {
   OWNED_BY: 'owned_by',
   OWNED_BY_ID: 'owned_by.id',
   SYNC_STATE: 'sync_state',
-  TAGS: 'tags'
+  TAGS: 'tags',
+  SIZE: 'size'
 }
 
 const DIMENSION_VALUES = {
@@ -45,8 +46,8 @@ export default class Files extends Manager {
     let versionId;
     if (options.versionId || options.version_id) {
       versionId = options.versionId || options.version_id;
-      (options.versionId) ? delete options.versionId : options.version_id; 
-    } 
+      (options.versionId) ? delete options.versionId : options.version_id;
+    }
     super._testForMissingId(versionId, BOX_CONSTANTS.VERSION, BOX_CONSTANTS.VERSION_ID);
     return versionId;
   }
@@ -66,7 +67,7 @@ export default class Files extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -91,12 +92,43 @@ export default class Files extends Manager {
   //   return this.client.makeRequest(apiPath, options);
   // }
 
+  getDownloadUrl(options) {
+    options = super._objectifyString(options) || {};
+    let fileId = super._getFileId(options);
+    options.params = options.params || {};
+    if (options.fields || options.params.fields) {
+      options.params.fields = (options.params.fields) ? options.params.fields : options.fields;
+      options.params.fields = options.params.fields.concat(',download_url');
+    } else {
+      options.params = {
+        fields: "download_url"
+      };
+    }
+    let apiPath = `${BASE_PATH}/${fileId}`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
+    return this.client.makeRequest(apiPath, options);
+  }
+
   upload(options) {
     options = options || {};
     options.url = options.url || `${UPLOAD_PATH}/files/content`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
     options.upload = true;
     return this.client.makeRequest(null, options);
+  }
+
+  preflightCheck(options) {
+    options = options || {};
+    if (!this.client._simpleMode) {
+      const REQUIRED_VALUES = [MODEL_VALUES.SIZE, MODEL_VALUES.NAME];
+      let skipValidation = super._setSkipValidation(options);
+      let ignoreModelValues = super._setIgnoreModelValues(options);
+
+      this._getFile(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
+    }
+    let apiPath = `${BASE_PATH}/content`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.OPTIONS;
+    return this.client.makeRequest(apiPath, options);
   }
 
   update(options) {
@@ -107,15 +139,15 @@ export default class Files extends Manager {
   }
 
   getComments(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}/comments`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.OPTIONS;
     return this.client.makeRequest(apiPath, options);
   }
 
   getTasks(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}/tasks`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -123,11 +155,19 @@ export default class Files extends Manager {
   }
 
   getEmbedLink(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
 
     options.params = options.params || {};
-    options.params.fields = 'expiring_embed_link';
+    if (options.fields || options.params.fields) {
+      if (options.fields) {
+        options.params.fields = options.fields;
+        delete options.fields;
+      }
+      options.params.fields = options.params.fields.concat(',expiring_embed_link');
+    } else {
+      options.params.fields = 'expiring_embed_link';
+    }
 
     let apiPath = `${BASE_PATH}/${fileId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -135,7 +175,7 @@ export default class Files extends Manager {
   }
 
   getVersions(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/versions`;
@@ -163,7 +203,7 @@ export default class Files extends Manager {
   }
 
   getTrashedFile(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/trash`;
@@ -295,7 +335,7 @@ export default class Files extends Manager {
   }
 
   delete(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}`;
@@ -314,7 +354,7 @@ export default class Files extends Manager {
   }
 
   permanentlyDelete(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
 
     let apiPath = `${BASE_PATH}/${fileId}/trash`;

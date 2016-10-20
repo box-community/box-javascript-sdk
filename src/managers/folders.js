@@ -46,7 +46,7 @@ export default class Folders extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let folderId = super._getFolderId(options);
     let apiPath = `${BASE_PATH}/${folderId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -54,7 +54,7 @@ export default class Folders extends Manager {
   }
 
   getItems(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let folderId = super._getFolderId(options);
     let apiPath = `${BASE_PATH}/${folderId}/items`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -62,7 +62,7 @@ export default class Folders extends Manager {
   }
 
   getCollaborations(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let folderId = super._getFolderId(options);
     let apiPath = `${BASE_PATH}/${folderId}/collaborations`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -76,8 +76,8 @@ export default class Folders extends Manager {
     return this.client.makeRequest(apiPath, options);
   }
 
-  getTrashedFile(options) {
-    options = options || {};
+  getTrashedFolder(options) {
+    options = super._objectifyString(options) || {};
     let folderId = super._getFolderId(options);
 
     let apiPath = `${BASE_PATH}/${folderId}/trash`;
@@ -133,7 +133,7 @@ export default class Folders extends Manager {
   }
 
   createSharedLink(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let folderId = super._getFolderId(options);
     return super._createSharedLink(options, folderId, BASE_PATH, this.FLATTENED_VALUES);
   }
@@ -167,7 +167,7 @@ export default class Folders extends Manager {
   }
 
   delete(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     options.params = options.params || {};
     options.params.recursive = options.params.recursive || true;
     let folderId = super._getFolderId(options);
@@ -178,7 +178,7 @@ export default class Folders extends Manager {
   }
 
   permanentlyDelete(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let folderId = super._getFolderId(options);
 
     let apiPath = `${BASE_PATH}/${folderId}/trash`;

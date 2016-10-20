@@ -23,7 +23,7 @@ export default class Collections extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let collectionId = this._getCollectionId(options);
     let apiPath = `${BASE_PATH}/${collectionId}/items`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;

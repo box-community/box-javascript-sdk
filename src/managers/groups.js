@@ -82,7 +82,7 @@ export default class Groups extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let groupId = this._getGroupId(options);
     let apiPath = `${BASE_PATH}/${groupId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -111,7 +111,7 @@ export default class Groups extends Manager {
   }
 
   getMembership(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let groupMembershipId = this._getGroupMembershipId(options);
     let apiPath = `${BASE_MEMBERSHIP_PATH}/${groupMembershipId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;

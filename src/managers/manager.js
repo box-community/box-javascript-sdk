@@ -38,6 +38,14 @@ export default class Manager {
     }
   }
 
+  _objectifyString(options) {
+    if (typeof options === 'string') {
+      let id = options;
+      options = { id: id };
+    }
+    return options;
+  }
+
   _getId(options) {
     let id = '';
     if (options.id) {
@@ -45,6 +53,7 @@ export default class Manager {
       delete options.id;
     } else if (typeof options === 'string') {
       id = options;
+      options = {};
     }
     return id;
   }
@@ -68,7 +77,7 @@ export default class Manager {
       (options.fileId) ? delete options.fileId : delete options.file_id;
     } else if (options.file && options.file.id) {
       fileId = options.file.id;
-    } 
+    }
     this._testForMissingId(fileId, BOX_CONSTANTS.FILE, BOX_CONSTANTS.FILE_ID);
     return fileId;
   }
@@ -97,7 +106,7 @@ export default class Manager {
   _testForMissingId(id, idType, correctlyFormattedIdProp) {
     idType = idType || 'unknown';
     correctlyFormattedIdProp = correctlyFormattedIdProp || 'unknown';
-    if(id === '') {
+    if (id === '') {
       throw new Error(`An ${idType} field is required for this API call. Please provide an object with a key formatted in this style: ${correctlyFormattedIdProp}`);
     }
   }

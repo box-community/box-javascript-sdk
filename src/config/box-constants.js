@@ -5,7 +5,8 @@ export default {
     GET: 'GET',
     POST: 'POST',
     PUT: 'PUT',
-    DELETE: 'DELETE'
+    DELETE: 'DELETE',
+    OPTIONS: 'OPTIONS'
   },
   MODES: {
     SKIP_VALIDATION: 'skipValidation',

@@ -164,9 +164,10 @@ export default class PersistentBoxClient extends BaseBoxClient {
           this._checkForEmptyObjects(options);
           if (this._returnsOnlyOptions) {
             if (options.upload) { delete options.upload; }
-            return options;
+            resolve(options);
+          } else {
+            resolve(BoxHttp(options));
           }
-          resolve(BoxHttp(options));
         });
     });
   }

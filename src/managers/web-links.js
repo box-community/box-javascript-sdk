@@ -58,7 +58,7 @@ export default class WebLinks extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let webLinkId = this._getWebLinkId(options);
     let apiPath = `${BASE_PATH}/${webLinkId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;

@@ -92,7 +92,7 @@ export default class Tasks extends Manager {
   }
 
   get(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let taskId = this._getTaskId(options);
     let apiPath = `${BASE_PATH}/${taskId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
@@ -136,7 +136,7 @@ export default class Tasks extends Manager {
   }
 
   getTaskAssignment(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let taskAssignmentId = this._getTaskAssignmentId(options);
     let apiPath = `${BASE_TASK_ASSIGNMENT_PATH}/${taskAssignmentId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
