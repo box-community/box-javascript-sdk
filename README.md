@@ -171,3 +171,99 @@ The options object will contain these values:
 var client = new box.BasicBoxClient({accessToken: "1234554321", simpleMode: true});
 ```
 If you enable `simpleMode`, the SDK will not process any validation against objects sent on calls requiring an options.body. 
+
+## Example Usage
+
+### Simple Upload
+```javascript
+var accessToken = "1234";
+var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
+var form = document.getElementById('file-form');
+var fileSelect = document.getElementById('file-select');
+var uploadButton = document.getElementById('upload-button');
+
+form.onsubmit = function (event) {
+  event.preventDefault();
+
+  uploadButton.innerHTML = 'Uploading...';
+  var files = fileSelect.files;
+  var formData = new FormData();
+
+  formData.append(files[0].name, files[0]);
+  formData.append('parent_id', '0');
+
+
+  boxClient.files.upload({ body: formData })
+    .then(function (resp) {
+      var newFile = resp.data;
+    })
+    .catch(function (err) {
+      console.log(err);
+    });
+}
+```
+### Get Root Folder
+```javascript
+var accessToken = "1234";
+var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
+boxClient.folders.get({ id: "0", params: {fields: "name,item_collection"} })
+  .then(function (resp) {
+    var rootFolder = resp.data;
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
+### Create New Folder
+```javascript
+var accessToken = "1234";
+var rootFolderId = "0";
+var folderName = "New Folder";
+var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
+boxClient.folders.create({ parent: { id: rootFolderId }, name: folderName })
+  .then(function (resp) {
+    var newFolder = resp.data;
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
+### Get File Info
+```javascript
+var accessToken = "1234";
+var fileId = "8675309";
+var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
+ boxClient.files.get({id: fileId})
+  .then(function (response) {
+    var file = response.data;
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
+### Get Comment Info
+```javascript
+var accessToken = "1234";
+var commentId = "42";
+var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
+ boxClient.comments.get({id: commentId})
+  .then(function (response) {
+    var comment = response.data;
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
+### Get Preview Link for File
+```javascript
+var accessToken = "1234";
+var fileId = "8675309";
+var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
+boxClient.files.getEmbedLink({ id: fileId })
+  .then(function (response) {
+    var file = response.data;
+  });
+  .catch(function (err) {
+    console.log(err);
+  });
+```
