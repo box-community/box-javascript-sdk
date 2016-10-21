@@ -18,5 +18,5 @@ export default {
   FILE_ID: 'fileId',
   FOLDER_ID: 'folderId',
   VERSION_ID: 'versionId',
-  BOX_TOKEN_LOCAL_STORAGE_KEY: 'box_token'
+  BOX_TOKEN_STORAGE_KEY: 'box_token'
 };

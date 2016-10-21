@@ -36,11 +36,11 @@ You can register a callback accessTokenHandler function with the `PersistentBoxC
 
 To create your own service for generating App User tokens, you can utilize an identity provider service like [Auth0](https://auth0.com) for example. Auth0 has a service called [webtask](https://webtask.io/) that you can write a secured lambda microservice that can generate a Box App User token using Auth0's [id_token](https://auth0.com/docs/tokens/id_token) to secure the API endpoint webtask provides.
 
-Additionally, Auth0 has a [guide](https://auth0.com/docs/integrations/aws-api-gateway) for implementing similar microservices within AWS.
+Additionally, Auth0 has a [guide](https://auth0.com/docs/integrations/aws-api-gateway) for implementing similar microservices within AWS and AWS Lambda.
 
 Auth0 is not a requirement for this SDK and is only listed to give an example. Any identity provider service that can aid in securing your own REST API for generating Box App User tokens should be sufficient.  
 
-The `BoxSdk` object can create a new `PersistentBoxClient`. You can register a Promise or callback that resolves to an access token and keep your `PersistentBoxClient` authorized to make calls to the Box API.
+The `BoxSdk` object can create a new `PersistentBoxClient`. You can register a function that returns a Promise or callback function that resolves to an access token and keep your `PersistentBoxClient` authorized to make calls to the Box API.
 ### Examples of Valid `accessTokenHandlers`
 ```javascript
 function returnNewAccessToken(cb) {
@@ -54,26 +54,92 @@ function returnNewAccessToken(cb) {
     });
 }
 
-var returnAccessTokenPromise = new Promise(function (resolve, reject) {
-  $.ajax({
-    url: "http://localhost:3000/userToken",
-    method: "GET",
-    headers: { "Authorization": "Bearer identitfyTokenFrom3rdParyIdentityProvider" },
-  })
-    .done(function (data) {
-      resolve(data);
-    });
-});
+function returnAccessTokenReturnsPromise() {
+  return new Promise(function (resolve, reject) {
+    $.ajax({
+      url: "http://localhost:3000/userToken",
+      method: "GET",
+      headers: { "Authorization": "Bearer identitfyTokenFrom3rdParyIdentityProvider" },
+      dataType: 'json'
+    })
+      .done(function (data) {
+        resolve(data);
+      });
+  });
+}
+
+//Angular Service Example
+
+//boxTokenService.js
+//Used to register your secure token endpoint for retrieving new tokens on expiration.
+//Utilizing Auth0's idToken for endpoint authentication.
+(function () {
+  'use strict';
+  angular
+    .module('authApp')
+    .service('boxTokenSerivce', ['$q', '$http', 'APP_CONFIG', BoxTokenService]);
+
+  function BoxTokenService($q, $http, APP_CONFIG) {
+    this.getAccessToken = function () {
+      var deferred = $q.defer();
+      var idToken = localStorage.getItem(APP_CONFIG.VARIABLES.AUTH0_ID_TOKEN_STORAGE_KEY);
+        $http({
+          url: APP_CONFIG.VARIABLES.BOX_REFRESH_TOKEN_URL,
+          type: 'GET',
+          headers: { Authorization: 'Bearer ' + idToken }
+        })
+          .then(function (response) {
+            deferred.resolve(response.data);
+          }, function (response) {
+            deferred.reject(response);
+          });
+      return deferred.promise;
+    }
+  }
+})();
+
+//boxApiService.js
+//Used to create PersistentBoxClients and register your function to retrieve new tokens on expiration.
+(function () {
+  'use strict';
+  angular
+    .module('authApp')
+    .service('boxApiService', BoxApiService);
+  BoxApiService.$inject = ['$q', '$http', 'boxTokenSerivce', 'APP_CONFIG'];
+  function BoxApiService($q, $http, boxToken, APP_CONFIG) {
+    var box = new BoxSdk();
+    this.persistentBoxClient = function () {
+      return new box.PersistentBoxClient({ accessTokenHandler: boxToken.getAccessToken });
+    };
+    this.persistentBoxClientOptionsOnly = function () {
+      return new box.PersistentBoxClient({ accessTokenHandler: boxToken.getAccessToken, noRequestMode: true });
+    }
+  }
+})();
 ```
 
 ### Register `accessTokenHandler` with a `PersistentBoxClient`
 After defining your `accessTokenHandler`, you can register the handler function with the `PersistentBoxClient`.
 ```javascript
 var box = new BoxSdk();
-var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnNewAccessToken });
+var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnAccessTokenReturnsPromise });
+```
+
+Please note, if you are utilizing a callback function as in `returnNewAccessToken`, you'll need to set the `callback` flag to true:
+```javascript
+var box = new BoxSdk();
+var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnNewAccessToken, callback: true });
 ```
 Before issuing an API call, the SDK will now make sure your access token is not expired and will refresh your token using this accessTokenHandler function if the access token is expired.
 
+### Change Storage Option
+By default, the `PersistentBoxClient` detects if HTML5 storage is available, and if so, uses `localStorage` to keep a token in browser cache to avoid making unnecessary AJAX calls.
+
+You can change the storage option to `sessionStorage` with the following flag:
+```javascript
+var box = new BoxSdk();
+var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnAccessTokenReturnsPromise, storage: "sessionStorage" });
+```
 ### Modes
 Additionally, you can set the `BasicBoxClient` and `PersistentBoxClient` to perform in a few different modes.
 #### `noRequestMode`
