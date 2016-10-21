@@ -7,34 +7,16 @@ export default class PersistentBoxClient extends BaseBoxClient {
   constructor(config) {
     config = config || {};
     super(config);
-    this._tokenExpirationTime = config.tokenExpirationTime || 3000000;
+    this._tokenExpirationTime = config.tokenExpirationTime || 2700000;
     this.accessTokenHandler = this._checkConfigForAccessTokenHandler(config);
-    this.accessTokenStore = this._checkConfigForAccessTokenStore(config);
   }
 
   _checkConfigForAccessTokenHandler(config) {
     if (typeof config === "object" && (config.accessTokenHandler || config.access_token_handler)) {
       config.accessTokenObject = config.accessTokenHandler || config.access_token_handler;
-      return this._promisifyAccessTokenHandler(config.accessTokenObject);
+      return config.accessTokenObject;
     } else {
       throw new Error("An accessTokenHandler is required to create a PersisentBoxClient. Please provide a callback function or promise that resolves to an access token");
-    }
-  }
-
-  _checkConfigForAccessTokenStore(config) {
-    if (typeof config === "object" && (config.accessTokenStore || config.access_token_store)) {
-      config.accessTokenStore = config.accessTokenStore || config.access_token_store;
-      return config.accessTokenStore;
-    } else {
-      return this._defaultAccessTokenStore(config);
-    }
-  }
-
-  _findAccessTokenOnConfig(config) {
-    if (typeof config === "object" && (config.initialAccessToken || config.initial_access_token)) {
-      return config.initialAccessToken || config.initial_access_token;
-    } else {
-      return null;
     }
   }
 
@@ -62,11 +44,14 @@ export default class PersistentBoxClient extends BaseBoxClient {
   }
 
   _promisifyAccessTokenHandler(accessTokenHandler) {
-    if (typeof accessTokenHandler === 'object' && 'then' in accessTokenHandler) {
-      return accessTokenHandler
-    } else if (typeof accessTokenHandler === 'function') {
+    var promiseOrCallback = accessTokenHandler();
+    if (typeof promiseOrCallback === 'object' && 'then' in promiseOrCallback) {
+      console.log("Found a promise...");
+      return promiseOrCallback;
+    } else if (typeof promiseOrCallback === 'function') {
+      console.log("Creating a promise...");
       return new Promise((resolve, reject) => {
-        return accessTokenHandler((err, token) => {
+        promiseOrCallback((err, token) => {
           if (err) { reject(err); }
           if (token) {
             resolve(token);
@@ -76,76 +61,34 @@ export default class PersistentBoxClient extends BaseBoxClient {
         });
       });
     } else {
-      throw new Error("accessTokenHandler must be a function or promise");
+      throw new Error("accessTokenHandler must resolve to a function or promise");
     }
   }
 
-  _handlePersistentAuthorization(options) {
-    let headers = options.headers || {};
-    return this.accessTokenStore.accessToken
-      .then((token) => {
-        console.log("Token Object: ");
-        console.log(token);
-        if ((token && token.expires_at < Date.now()) || (token && token.expiresAt < Date.now()) || this._isTokenExpired) {
-          this.refreshAccessToken();
-          this._handlePersistentAuthorization(options);
-        } else if (token && (token.access_token || token.accessToken)) {
-          return new Promise((resolve, reject) => {
-            headers[BOX_CONSTANTS.HEADER_AUTHORIZATION] = `Bearer ${token.accessToken}`;
-            resolve(headers);
-          });
-        } else {
-          throw new Error("Couldn't retrieve a new token.");
-        }
-      });
-  }
-
-  _defaultAccessTokenStore(config) {
-    this._accessToken = {};
-    this._isTokenExpired = true;
-
-    this._init = (config) => {
-      let token = (!this._isEmpty(config)) ? this._findAccessTokenOnConfig(config) : null;
-      if (token) {
-        this.setAccessToken(token);
+  _defaultAccessTokenStore() {
+    this._accessToken = () => {
+      let boxToken = localStorage.getItem(BOX_CONSTANTS.BOX_TOKEN_LOCAL_STORAGE_KEY);
+      boxToken = (boxToken) ? JSON.parse(boxToken) : null;
+      if (!boxToken || this._isExpired(boxToken)) {
+        return new Promise((resolve, reject) => {
+          return this._promisifyAccessTokenHandler(this.accessTokenHandler)
+            .then((token) => {
+              token = this._verifyAccessTokenObject(token)
+              localStorage.setItem(BOX_CONSTANTS.BOX_TOKEN_LOCAL_STORAGE_KEY, JSON.stringify(token));
+              resolve(token);
+            });
+        });
       } else {
-        this.refreshAccessToken();
+        return new Promise((resolve, reject) => { resolve(this._verifyAccessTokenObject(boxToken)); });
       }
     }
 
-    this.setAccessToken = (token) => {
-      this._accessToken = new Promise((resolve, reject) => {
-        this._isTokenExpired = false;
-        resolve(this._verifyAccessTokenObject(token));
-      })
+    this._isExpired = (token) => {
+      return (token.expiresAt < Date.now()) ? true : false;
     }
-
-    this.getAccessToken = () => {
-      return this._accessToken;
-    }
-
-    this.removeAccessToken = () => {
-      this._accessToken = new Promise((resolve, reject) => {
-        resolve(null);
-      });
-      this._isTokenExpired = true;
-    }
-
-    this.refreshAccessToken = () => {
-      this._accessToken = this.accessTokenHandler
-        .then((token) => {
-          this._isTokenExpired = false;
-          return this._verifyAccessTokenObject(token);
-        });
-    }
-
-    this._init(config);
 
     return {
-      accessToken: this.getAccessToken(),
-      setAccessToken: this.setAccessToken,
-      removeAccessToken: this.removeAccessToken,
-      refreshAccessToken: this.refreshAccessToken
+      accessToken: this._accessToken
     }
   }
 
@@ -155,8 +98,13 @@ export default class PersistentBoxClient extends BaseBoxClient {
 
   makeRequest(path, options) {
     return new Promise((resolve, reject) => {
-      this._handlePersistentAuthorization(options)
-        .then((headers) => {
+      this.accessTokenStore.accessToken()
+        .then((token) => {
+          console.log("Finalized token: ");
+          console.log(token);
+
+          let headers = options.headers || {};
+          headers[BOX_CONSTANTS.HEADER_AUTHORIZATION] = `Bearer ${token.accessToken}`;
           options = options || {};
           options.url = options.url || `${this._baseApiUrl}${path}`;
           options.headers = headers;
