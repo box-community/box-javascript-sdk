@@ -59,30 +59,10 @@ export default function BoxHttp(options) {
   // });
 
   // return promise;
-  let formattedOptions = {};
-  let uri = options.url;
-
-  if (options.params) {
-    uri += '?';
-    uri += Object.keys(options.params).map((key) => {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(options.params[key]);
-    }).join('&');
-  }
-
-  if (options.body && typeof options.body === 'object' && !options.upload) {
-    options.body = JSON.stringify(options.body);
-    options.headers['Content-Type'] = "application/json;charset=UTF-8";
-  } 
-  formattedOptions.headers = options.headers
   if(options.upload) {
-    options.headers['Content-Type'] = "multipart/form-data";
-    return Axios.post(uri, options.body, formattedOptions)
+    return Axios.post(options.url, options.body, options)
   }
-  formattedOptions.method = options.method;
-  formattedOptions.data = options.body;
-  formattedOptions.mode = 'no-cors';
-  
-  return Axios(uri, formattedOptions)
+  return Axios(options.url, options)
     .then(checkStatus)
     .catch(checkStatus);
 
@@ -90,14 +70,13 @@ export default function BoxHttp(options) {
     if (response.status >= 200 && response.status < 300) {
       return response
     } else {
-      formattedOptions.url = uri;
-      delete formattedOptions.mode;
+      delete options.mode;
       (response.message) ? response.message : "Network Error";
       var error = new Error(response.message);
       error.status = response.status;
       error.statusText = response.statusText;
       error.response = response;
-      error.options = formattedOptions;
+      error.options = options;
       throw error;
     }
   }

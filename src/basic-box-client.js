@@ -1,6 +1,5 @@
 'use strict';
 import BaseBoxClient from './base-box-client';
-import BoxHttp from './box-http';
 import BOX_CONSTANTS from './config/box-constants'
 
 export default class BasicBoxClient extends BaseBoxClient {
@@ -19,7 +18,7 @@ export default class BasicBoxClient extends BaseBoxClient {
       if (options.upload) { delete options.upload; }
       return options;
     }
-    return BoxHttp(options);
+    return this.httpService(options);
   }
 
   removeAccessTokenAndRerunRequest(options, accessToken, setAsNewAccessToken) {
@@ -46,6 +45,7 @@ export default class BasicBoxClient extends BaseBoxClient {
     }
 
     options.headers = this._handleAuthorization(options, accessToken);
+    options = this._formatOptions(options);
     return BoxHttp(options);
   }
 

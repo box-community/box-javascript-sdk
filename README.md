@@ -109,7 +109,9 @@ function returnAccessTokenReturnsPromise() {
   function BoxApiService($q, $http, boxToken, APP_CONFIG) {
     var box = new BoxSdk();
     this.persistentBoxClient = function () {
-      return new box.PersistentBoxClient({ accessTokenHandler: boxToken.getAccessToken });
+      //You can overwrite the built-in SDK httpService and Promise objects with Angular's services.
+      //With this configuration, $scope will update from within the deferred .then methods returned by the SDK.  
+      return new box.PersistentBoxClient({ accessTokenHandler: boxToken.getAccessToken, httpService: $http, Promise: $q });
     };
     this.persistentBoxClientOptionsOnly = function () {
       return new box.PersistentBoxClient({ accessTokenHandler: boxToken.getAccessToken, noRequestMode: true });
@@ -128,7 +130,7 @@ var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnAcce
 Please note, if you are utilizing a callback function as in `returnNewAccessToken`, you'll need to set the `callback` flag to true:
 ```javascript
 var box = new BoxSdk();
-var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnNewAccessToken, callback: true });
+var persistClient = new box.PersistentBoxClient({ accessTokenHandler: returnNewAccessToken, isCallback: true });
 ```
 Before issuing an API call, the SDK will now make sure your access token is not expired and will refresh your token using this accessTokenHandler function if the access token is expired.
 
@@ -171,6 +173,31 @@ The options object will contain these values:
 var client = new box.BasicBoxClient({accessToken: "1234554321", simpleMode: true});
 ```
 If you enable `simpleMode`, the SDK will not process any validation against objects sent on calls requiring an options.body. 
+
+#### `httpService`
+```javascript
+var client = new box.PersistentBoxClient({ httpService: $http });
+```
+You can change what service completes the AJAX HTTP requests completed by the SDK. Typically, this is useful for a framework like Angular.
+
+#### `Promise`
+```javascript
+var client = new box.PersistentBoxClient({ Promise: $q });
+```
+You can change what service creates the Promises used by the SDK. Typically, this is useful for a framework like Angular.
+
+#### Configuration for Angular 1
+Before instantiating any of the Box clients within the Box SDK, you'll need access to `$http`. You'll also need `$q` if working with the `PersistentBoxClient`.
+
+To use the `PersistentBoxClient` and emit changes to `$scope`, use the following configuration:
+```javascript
+var persistClient = new box.PersistentBoxClient({ accessTokenHandler: boxToken.getAccessToken, httpService: $http, Promise: $q });
+```
+
+To use the `BasicBoxClient` and emit changes to `$scope`, use the following configuration:
+```javascript
+var client = new box.BasicBoxClient({accessToken: "1234554321", httpService: $http});
+```
 
 ## Example Usage
 

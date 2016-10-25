@@ -9,6 +9,7 @@ import Metadata from './managers/metadata';
 import Tasks from './managers/tasks';
 import Users from './managers/users';
 import BOX_CONSTANTS from './config/box-constants'
+import BoxHttp from './box-http';
 
 export default class BaseBoxClient {
   constructor(config) {
@@ -26,9 +27,11 @@ export default class BaseBoxClient {
     this._returnsOnlyOptions = (config.hasOwnProperty('noRequestMode') && config.noRequestMode === true) ? true : false;
     this._skipValidation = (config.hasOwnProperty('skipValidation') && config.skipValidation === true) ? true : false;
     this._simpleMode = (config.hasOwnProperty('simpleMode') && config.simpleMode === true) ? true : false;
-
     this._accessToken = this._checkTokenType(config);
     this._hasStoredAccessToken = (this._accessToken) ? true : false;
+
+    this.httpService = config.httpService || BoxHttp;
+    this.Promise = config.Promise || Promise;
   }
 
   get folders() {
@@ -156,5 +159,37 @@ export default class BaseBoxClient {
       delete options.fields;
     }
     return options.params;
+  }
+
+  _formatOptions(options) {
+    let formattedOptions = {};
+    let uri = options.url;
+
+    if (options.params) {
+      uri += '?';
+      uri += Object.keys(options.params).map((key) => {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(options.params[key]);
+      }).join('&');
+    }
+    formattedOptions.url = uri;
+    formattedOptions.headers = options.headers;
+
+    if (options.body && typeof options.body === 'object' && !options.upload) {
+      formattedOptions.body = JSON.stringify(options.body);
+      formattedOptions.headers['Content-Type'] = "application/json;charset=UTF-8";
+    }
+
+    if (options.upload) {
+      formattedOptions.headers['Content-Type'] = undefined;
+      formattedOptions.data = options.body;
+      formattedOptions.method = options.method;
+      formattedOptions.upload = true;
+      return formattedOptions
+    }
+
+    formattedOptions.method = options.method;
+    formattedOptions.data = options.body;
+    formattedOptions.mode = 'no-cors';
+    return formattedOptions;
   }
 }
