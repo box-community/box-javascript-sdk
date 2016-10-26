@@ -28,7 +28,7 @@ export default class Comments extends Manager {
     } else if (options.comment && options.comment.id) {
       id = options.comment.id;
     }
-    super._testForMissingId(id);
+    super._testForMissingId(id, BOX_CONSTANTS.COMMENT, BOX_CONSTANTS.COMMENT_ID);
     return id;
   }
 

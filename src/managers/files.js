@@ -142,7 +142,7 @@ export default class Files extends Manager {
     options = super._objectifyString(options) || {};
     let fileId = super._getFileId(options);
     let apiPath = `${BASE_PATH}/${fileId}/comments`;
-    options.method = BOX_CONSTANTS.HTTP_VERBS.OPTIONS;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
     return this.client.makeRequest(apiPath, options);
   }
 

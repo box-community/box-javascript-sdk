@@ -13,10 +13,12 @@ export default {
     IGNORE_MODEL_VALUES: 'ignoreModelValues'
   },
   FOLDER: 'folder',
-  FILE: 'file',
-  VERSION: 'version',
-  FILE_ID: 'fileId',
   FOLDER_ID: 'folderId',
+  FILE: 'file',
+  FILE_ID: 'fileId',
+  VERSION: 'version',
   VERSION_ID: 'versionId',
+  COMMENT: 'comment',
+  COMMENT_ID: 'commentId',
   BOX_TOKEN_STORAGE_KEY: 'box_token'
 };
