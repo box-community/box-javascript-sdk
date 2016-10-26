@@ -56,7 +56,7 @@ export default class Comments extends Manager {
   create(options) {
     options = options || {};
     if (!this.client._simpleMode) {
-      const REQUIRED_VALUES = [MODEL_VALUES.ITEM, MODEL_VALUES.ITEM_ID, MODEL_VALUES.ITEM_TYPE];
+      const REQUIRED_VALUES = [MODEL_VALUES.ITEM, MODEL_VALUES.ITEM_ID, MODEL_VALUES.ITEM_TYPE, MODEL_VALUES.MESSAGE];
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
 

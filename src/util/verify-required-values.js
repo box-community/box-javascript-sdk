@@ -9,7 +9,7 @@ export default (item, values) => {
       let requiredValues = requiredValue.split('.');
       for (let i = 0, l = requiredValues.length; i < l; i++) {
         let prop = requiredValues[i];
-        if (prop in temp) {
+        if (temp.hasOwnProperty(prop)) {
           temp = temp[prop];
         }
       }
