@@ -294,3 +294,21 @@ boxClient.files.getEmbedLink({ id: fileId })
     console.log(err);
   });
 ```
+### Create Metadata on File
+```javascript
+var accessToken = "1234";
+var fileId = "8675309";
+//scope is an optional parameter you can use in the object.
+//If not set, scope will default to "enterprise".
+var scope = "enterprise";
+var box = new BoxSdk();
+var client = new box.BasicBoxClient({ accessToken: accessToken });
+client.metadata.createFileMetadata({
+  fileId: fileId,
+  scope: scope,
+  body: {
+    lineOfBusiness: "commercial"
+  },
+  templateKey: "customer"
+})
+```

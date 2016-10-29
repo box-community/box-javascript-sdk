@@ -18,6 +18,7 @@ export default class BasicBoxClient extends BaseBoxClient {
       if (options.upload) { delete options.upload; }
       return options;
     }
+    options = this._formatOptions(options);
     return this.httpService(options);
   }
 

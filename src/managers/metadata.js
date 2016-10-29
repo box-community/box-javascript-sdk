@@ -29,6 +29,7 @@ export default class Metadata extends Manager {
     let scope = super._getScope(options);
     let apiPath = `${BASE_PATH}/${scope}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
+    options.header = options.header || {};
     return this.client.makeRequest(apiPath, options);
   }
 
@@ -80,6 +81,8 @@ export default class Metadata extends Manager {
 
     let apiPath = `${BASE_PATH_FOLDER_METADATA}/${folderId}/metadata/${scope}/${templateKey}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
+    options.header = options.header || {};
+    options.header['Content-Type'] = "application/json";
     return this.client.makeRequest(apiPath, options);
   }
 
@@ -91,6 +94,8 @@ export default class Metadata extends Manager {
 
     let apiPath = `${BASE_PATH_FILE_METADATA}/${fileId}/metadata/${scope}/${templateKey}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
+    options.header = options.header || {};
+    options.header['Content-Type'] = "application/json";
     return this.client.makeRequest(apiPath, options);
   }
 

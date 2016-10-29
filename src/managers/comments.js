@@ -82,7 +82,7 @@ export default class Comments extends Manager {
   }
 
   delete(options) {
-    options = options || {};
+    options = super._objectifyString(options) || {};
     let commentId = this._getCommentId(options);
     let apiPath = `${BASE_PATH}/${commentId}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.DELETE;

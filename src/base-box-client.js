@@ -176,7 +176,9 @@ export default class BaseBoxClient {
 
     if (options.body && typeof options.body === 'object' && !options.upload) {
       formattedOptions.body = JSON.stringify(options.body);
-      formattedOptions.headers['Content-Type'] = "application/json;charset=UTF-8";
+      if (!formattedOptions.headers['Content-Type']) {
+        formattedOptions.headers['Content-Type'] = "application/json;charset=UTF-8";
+      }
     }
 
     if (options.upload) {
