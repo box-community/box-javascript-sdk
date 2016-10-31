@@ -6,6 +6,7 @@ import Collections from './managers/collections';
 import Comments from './managers/comments';
 import Groups from './managers/groups';
 import Metadata from './managers/metadata';
+import Search from './managers/search';
 import Tasks from './managers/tasks';
 import Users from './managers/users';
 import BOX_CONSTANTS from './config/box-constants'
@@ -21,6 +22,7 @@ export default class BaseBoxClient {
     this._comments = new Comments(this);
     this._groups = new Groups(this);
     this._metadata = new Metadata(this);
+    this._search = new Search(this);
     this._tasks = new Tasks(this);
     this._users = new Users(this);
     this._baseApiUrl = config.baseUrl || "https://api.box.com/2.0";
@@ -64,6 +66,10 @@ export default class BaseBoxClient {
 
   get metadata() {
     return this._metadata;
+  }
+
+  get search() {
+    return this._search;
   }
 
   get tasks() {
