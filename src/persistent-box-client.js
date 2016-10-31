@@ -113,7 +113,8 @@ export default class PersistentBoxClient extends BaseBoxClient {
     }
 
     this._isExpired = (token) => {
-      return (token.expiresAt < Date.now()) ? true : false;
+      let expiresAt = token.expires_at || token.expiresAt;
+      return (expiresAt < Date.now()) ? true : false;
     }
 
     return {
