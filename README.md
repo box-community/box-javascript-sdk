@@ -9,7 +9,7 @@ After running these commands, a new directory (`lib`) should now be added to you
 # Using the Box Clientside SDK
 
 ## Getting Started
-Currently the root of the Box Clientside SDK only contains a `BasicBoxClient` property that contains Managers for interacting with the Box REST API.
+Currently the root of the Box Clientside SDK contains a `BasicBoxClient` property and a `PersistentBoxClient` property that contains Managers for interacting with the Box REST API.
 
 To initialize the SDK, use the following:
 
