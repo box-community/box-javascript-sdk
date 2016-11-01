@@ -81,8 +81,8 @@ export default class Metadata extends Manager {
 
     let apiPath = `${BASE_PATH_FOLDER_METADATA}/${folderId}/metadata/${scope}/${templateKey}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
-    options.header = options.header || {};
-    options.header['Content-Type'] = "application/json";
+    options.headers = options.headers || {};
+    options.headers['Content-Type'] = "application/json";
     return this.client.makeRequest(apiPath, options);
   }
 
@@ -94,8 +94,21 @@ export default class Metadata extends Manager {
 
     let apiPath = `${BASE_PATH_FILE_METADATA}/${fileId}/metadata/${scope}/${templateKey}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
-    options.header = options.header || {};
-    options.header['Content-Type'] = "application/json";
+    options.headers = options.headers || {};
+    options.headers['Content-Type'] = "application/json";
+    return this.client.makeRequest(apiPath, options);
+  }
+
+  updateFileMetadata(options) {
+    options = options || {};
+    let fileId = super._getFileId(options);
+    let scope = super._getScope(options);
+    let templateKey = super._getTemplateKey(options);
+
+    let apiPath = `${BASE_PATH_FILE_METADATA}/${fileId}/metadata/${scope}/${templateKey}`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
+    options.headers = options.headers || {};
+    options.headers['Content-Type'] = "application/json-patch+json";
     return this.client.makeRequest(apiPath, options);
   }
 

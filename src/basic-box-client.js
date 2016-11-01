@@ -14,11 +14,11 @@ export default class BasicBoxClient extends BaseBoxClient {
     options.headers = this._handleAuthorization(options);
     options.params = this._applyFields(options);
     this._checkForEmptyObjects(options);
+    options = this._formatOptions(options);
     if (this._returnsOnlyOptions) {
       if (options.upload) { delete options.upload; }
       return options;
     }
-    options = this._formatOptions(options);
     return this.httpService(options);
   }
 

@@ -136,6 +136,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
         options.headers = headers;
         options.params = this._applyFields(options);
         this._checkForEmptyObjects(options);
+        options = this._formatOptions(options);
         if (this._returnsOnlyOptions) {
           if (options.upload) { delete options.upload; }
           return new this.Promise((resolve, reject) => { resolve(options); });
