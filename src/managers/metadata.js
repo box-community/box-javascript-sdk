@@ -112,6 +112,19 @@ export default class Metadata extends Manager {
     return this.client.makeRequest(apiPath, options);
   }
 
+  updateFolderMetadata(options) {
+    options = options || {};
+    let folderId = super._getFolderId(options);
+    let scope = super._getScope(options);
+    let templateKey = super._getTemplateKey(options);
+
+    let apiPath = `${BASE_PATH_FOLDER_METADATA}/${folderId}/metadata/${scope}/${templateKey}`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
+    options.headers = options.headers || {};
+    options.headers['Content-Type'] = "application/json-patch+json";
+    return this.client.makeRequest(apiPath, options);
+  }
+
   deleteFolderMetadata(options) {
     options = options || {};
     let folderId = super._getFolderId(options);
