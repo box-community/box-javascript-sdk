@@ -10,6 +10,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
     this.accessTokenHandler = this._checkConfigForAccessTokenHandler(config);
     this.accessTokenStore = this._defaultAccessTokenStore();
     this.storage = config.storage || "localStorage";
+    this.disableStorage = config.disableStorage || false;
     this.isCallback = config.isCallback || false;
     this.isPromise = config.isPromise || true;
     this.supportsStorage = this._storageAvailable(this.storage);
@@ -86,7 +87,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
 
   _defaultAccessTokenStore() {
     this._accessToken = () => {
-      if (this.supportsStorage) {
+      if (this.supportsStorage && !this.disableStorage) {
         let boxToken = window[this.storage].getItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY);
         boxToken = (boxToken) ? JSON.parse(boxToken) : null;
         if (!boxToken || this._isExpired(boxToken)) {

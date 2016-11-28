@@ -3,6 +3,10 @@ node_modules/
 lib/
 server/
 test/
+build/
+dist/
+test.js
+gulpfile.js
 
 .DS_Store
 src/.DS_Store

@@ -1,8 +1,5 @@
 'use strict';
 import BOX_CONSTANTS from '../config/box-constants';
-import VerifyRequiredValues from '../util/verify-required-values';
-import CreateRequestBody from '../util/create-request-body';
-import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
 
 const BASE_PATH = '/collaborations';
@@ -40,9 +37,9 @@ export default class Collaborations extends Manager {
     skipValidation = skipValidation || this.client.skipValidation || false;
     ignoreModelValues = ignoreModelValues || false;
     if (options.collaboration) {
-      if (!skipValidation) { VerifyRequiredValues(options.collaboration, values) };
-      if (!ignoreModelValues) { NormalizeObjectKeys(options.collaboration, this.FLATTENED_VALUES); }
-      options.body = CreateRequestBody(options.comment, this.ALL_VALUES, ignoreModelValues);
+      if (!skipValidation) { super.VerifyRequiredValues(options.collaboration, values) };
+      if (!ignoreModelValues) { super.NormalizeObjectKeys(options.collaboration, this.FLATTENED_VALUES); }
+      options.body = super.CreateRequestBody(options.comment, this.ALL_VALUES, ignoreModelValues);
       delete options.collaboration;
     } else {
       super._getModel(options, values, skipValidation, ignoreModelValues);

@@ -1,9 +1,5 @@
 'use strict';
 import BOX_CONSTANTS from '../config/box-constants';
-import VerifyRequiredValues from '../util/verify-required-values';
-import CreateRequestBody from '../util/create-request-body';
-import InvestigateModes from '../util/investigate-modes';
-import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
 
 const BASE_PATH = '/comments';
@@ -36,9 +32,9 @@ export default class Comments extends Manager {
     skipValidation = skipValidation || this.client.skipValidation || false;
     ignoreModelValues = ignoreModelValues || false;
     if (options.comment) {
-      if (!skipValidation) { VerifyRequiredValues(options.comment, values) };
-      if (!ignoreModelValues) { NormalizeObjectKeys(options.comment, this.FLATTENED_VALUES); }
-      options.body = CreateRequestBody(options.comment, this.ALL_VALUES, ignoreModelValues);
+      if (!skipValidation) { super.VerifyRequiredValues(options.comment, values) };
+      if (!ignoreModelValues) { super.NormalizeObjectKeys(options.comment, this.FLATTENED_VALUES); }
+      options.body = super.CreateRequestBody(options.comment, this.ALL_VALUES, ignoreModelValues);
       delete options.comment;
     } else {
       super._getModel(options, values, skipValidation, ignoreModelValues);

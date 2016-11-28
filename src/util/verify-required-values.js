@@ -13,9 +13,9 @@ export default (item, values) => {
           temp = temp[prop];
         }
       }
-      if (!temp) { throw new Error(`A ${requiredValue} field is required for this API call`) };
+      if (!temp) { throw new Error(`A(n) ${requiredValue} field is required for this API call`) };
     } else if (!item[requiredValue]) {
-      throw new Error(`A ${requiredValue} field is required for this API call`);
+      throw new Error(`A(n) ${requiredValue} field is required for this API call`);
     }
   });
 };

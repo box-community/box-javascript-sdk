@@ -107,7 +107,7 @@ export default class Manager {
     idType = idType || 'unknown';
     correctlyFormattedIdProp = correctlyFormattedIdProp || 'unknown';
     if (id === '') {
-      throw new Error(`An ${idType} field is required for this API call. Please provide an object with a key formatted in this style: ${correctlyFormattedIdProp}`);
+      throw new Error(`A(n) ${idType} field is required for this API call. Please provide an object with a key formatted in this style: ${correctlyFormattedIdProp}`);
     }
   }
 
