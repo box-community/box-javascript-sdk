@@ -6,6 +6,6 @@ build/
 dist/
 test.js
 gulpfile.js
-
+npm-debug.log
 .DS_Store
 src/.DS_Store

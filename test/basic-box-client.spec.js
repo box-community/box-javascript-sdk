@@ -35,9 +35,9 @@ describe('Given the BasicBoxClient', function () {
     it('should have a default Promise', () => {
       let client = new box.BasicBoxClient({});
       let promise = new client.Promise((resolve, reject) => { });
-      // console.log(typeof promise.then);
       expect(typeof client.Promise).to.equal('function');
       expect(typeof promise).to.equal('object');
+      expect(typeof promise.then).to.equal('function');
     });
   });
 });
