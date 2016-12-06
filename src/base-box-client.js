@@ -179,6 +179,12 @@ export default class BaseBoxClient {
     }
     formattedOptions.url = uri;
     formattedOptions.headers = options.headers;
+    
+    if (options.upload) {
+      options.headers['Content-Type'] = "multipart/form-data";
+      options.mode = 'no-cors';
+      return options;
+    }
 
     if (options.body && typeof options.body === 'object' && !options.upload) {
       formattedOptions.body = JSON.stringify(options.body);
@@ -187,13 +193,6 @@ export default class BaseBoxClient {
       }
     }
 
-    if (options.upload) {
-      formattedOptions.headers['Content-Type'] = undefined;
-      formattedOptions.data = options.body;
-      formattedOptions.method = options.method;
-      formattedOptions.upload = true;
-      return formattedOptions
-    }
 
     formattedOptions.method = options.method;
     formattedOptions.data = options.body;

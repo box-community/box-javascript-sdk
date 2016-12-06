@@ -2,8 +2,10 @@
 import Axios from 'axios';
 
 export default function BoxHttp(options) {
-  if(options.upload) {
+  if (options.upload) {
     return Axios.post(options.url, options.body, options)
+      .then(checkStatus)
+      .catch(checkStatus);
   }
   return Axios(options.url, options)
     .then(checkStatus)
