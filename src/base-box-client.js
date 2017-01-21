@@ -179,10 +179,10 @@ export default class BaseBoxClient {
     }
     formattedOptions.url = uri;
     formattedOptions.headers = options.headers;
-    
+
     if (options.upload) {
       options.headers['Content-Type'] = "multipart/form-data";
-      options.mode = 'no-cors';
+      options.mode = 'cors';
       return options;
     }
 
@@ -196,7 +196,7 @@ export default class BaseBoxClient {
 
     formattedOptions.method = options.method;
     formattedOptions.data = options.body;
-    formattedOptions.mode = 'no-cors';
+    formattedOptions.mode = 'cors';
     return formattedOptions;
   }
 }

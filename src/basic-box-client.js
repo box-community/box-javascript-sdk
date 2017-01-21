@@ -16,7 +16,10 @@ export default class BasicBoxClient extends BaseBoxClient {
     this._checkForEmptyObjects(options);
     options = this._formatOptions(options);
     if (this._returnsOnlyOptions) {
-      if (options.upload) { delete options.upload; }
+      if (options.upload) {
+        options.headers["Content-Type"] = undefined;
+        delete options.upload;
+      }
       return options;
     }
     return this.httpService(options);

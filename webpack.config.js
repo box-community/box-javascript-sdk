@@ -16,13 +16,14 @@ if (env === 'build') {
 
 var config = {
   entry: __dirname + '/src/sdk.js',
-  devtool: 'source-map',
+  devtool: '#source-map',
   output: {
     path: __dirname + '/lib',
     filename: outputFile,
     library: libraryName,
     libraryTarget: 'umd',
-    umdNamedDefine: true
+    umdNamedDefine: true,
+    sourceMapFilename: libraryName + '.map'
   },
   module: {
     loaders: [

@@ -1,28 +1,25 @@
 'use strict';
-import Axios from 'axios';
+import "whatwg-fetch";
 
 export default function BoxHttp(options) {
   if (options.upload) {
-    return Axios.post(options.url, options.body, options)
-      .then(checkStatus)
-      .catch(checkStatus);
+    options.headers["Content-Type"] = undefined;
+    return fetch(options.url, options);
   }
-  return Axios(options.url, options)
-    .then(checkStatus)
-    .catch(checkStatus);
+  return fetch(options.url, options)
+    .then(handleErrors)
+    .then(parseJson);
 
-  function checkStatus(response) {
-    if (response.status >= 200 && response.status < 300) {
-      return response
-    } else {
-      delete options.mode;
-      (response.message) ? response.message : "Network Error";
-      var error = new Error(response.message);
-      error.status = response.status;
-      error.statusText = response.statusText;
-      error.response = response;
-      error.options = options;
+  function handleErrors(response) {
+    if (!response.ok) {
+      var error = new Error(response.statusText)
+      error.response = response
       throw error;
     }
+    return response;
+  }
+
+  function parseJson(response) {
+    return response.json();
   }
 }

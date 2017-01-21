@@ -13,6 +13,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
     this.disableStorage = config.disableStorage || false;
     this.isCallback = config.isCallback || false;
     this.isPromise = config.isPromise || true;
+    this.requestRetryTimes = config.retryTimes || 3;
     this.supportsStorage = this._storageAvailable(this.storage);
   }
 
@@ -88,20 +89,15 @@ export default class PersistentBoxClient extends BaseBoxClient {
   _defaultAccessTokenStore() {
     this._accessToken = () => {
       if (this.supportsStorage && !this.disableStorage) {
-        let boxToken = window[this.storage].getItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY);
-        boxToken = (boxToken) ? JSON.parse(boxToken) : null;
-        if (!boxToken || this._isExpired(boxToken)) {
-          return new this.Promise((resolve, reject) => {
-            return this._promisifyAccessTokenHandler(this.accessTokenHandler)
-              .then((token) => {
-                token = this._verifyAccessTokenObject(token)
-                window[this.storage].setItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY, JSON.stringify(token));
-                resolve(token);
-              });
-          });
-        } else {
-          return new this.Promise((resolve, reject) => { resolve(this._verifyAccessTokenObject(boxToken)); });
-        }
+        return new this.Promise((resolve, reject) => {
+          return this._promisifyAccessTokenHandler(this.accessTokenHandler)
+            .then((token) => {
+              token = this._verifyAccessTokenObject(token)
+              window[this.storage].setItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY, JSON.stringify(token));
+              resolve(token);
+            });
+        });
+        return new this.Promise((resolve, reject) => { resolve(this._verifyAccessTokenObject(boxToken)); });
       } else {
         return new this.Promise((resolve, reject) => {
           return this._promisifyAccessTokenHandler(this.accessTokenHandler)
@@ -113,37 +109,74 @@ export default class PersistentBoxClient extends BaseBoxClient {
       }
     }
 
-    this._isExpired = (token) => {
-      let expiresAt = token.expires_at || token.expiresAt;
-      return (expiresAt < Date.now()) ? true : false;
-    }
+    // this._isExpired = (token) => {
+    //   let expiresAt = token.expires_at || token.expiresAt;
+    //   return (expiresAt < Date.now()) ? true : false;
+    // }
 
     return {
       accessToken: this._accessToken
     }
   }
 
-  retryRequest(options) {
-
+  _isExpired(token) {
+    let expiresAt = token.expires_at || token.expiresAt;
+    return (expiresAt < Date.now()) ? true : false;
   }
 
-  makeRequest(path, options) {
-    return this.accessTokenStore.accessToken()
+  retrieveToken(requestRetryCount) {
+    if (this.supportsStorage && !this.disableStorage) {
+      let boxToken = window[this.storage].getItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY);
+      boxToken = (boxToken) ? JSON.parse(boxToken) : null;
+      if (boxToken && !this._isExpired(boxToken) && requestRetryCount === 0) {
+        return new this.Promise((resolve, reject) => { resolve(boxToken) });
+      } else {
+        return this.accessTokenStore.accessToken();
+      }
+    } else {
+      return this.accessTokenStore.accessToken();
+    }
+  }
+
+  reauth(path, options, requestRetryCount) {
+    return this.retrieveToken(requestRetryCount)
       .then((token) => {
         let headers = options.headers || {};
         headers[BOX_CONSTANTS.HEADER_AUTHORIZATION] = `Bearer ${token.accessToken}`;
         options = options || {};
-        options.url = options.url || `${this._baseApiUrl}${path}`;
-        options.headers = headers;
-        options.params = this._applyFields(options);
-        this._checkForEmptyObjects(options);
-        options = this._formatOptions(options);
+        let compiledOptions = Object.assign({}, options);
+        compiledOptions.url = options.url || `${this._baseApiUrl}${path}`;
+        compiledOptions.headers = headers;
+        compiledOptions.params = this._applyFields(options);
+        this._checkForEmptyObjects(compiledOptions);
+        compiledOptions = this._formatOptions(compiledOptions);
+        return compiledOptions;
+      });
+
+  }
+
+  makeRequest(path, options, requestRetryCount) {
+    requestRetryCount = requestRetryCount || 0;
+    if (requestRetryCount > this.requestRetryTimes) {
+      throw new Error("Exceeded retry count.");
+    }
+    return this.reauth(path, options, requestRetryCount)
+      .then((compiledOptions) => {
         if (this._returnsOnlyOptions) {
-          if (options.upload) { delete options.upload; }
-          return new this.Promise((resolve, reject) => { resolve(options); });
+          if (compiledOptions.upload) {
+            compiledOptions.headers["Content-Type"] = undefined;
+            delete compiledOptions.upload;
+          }
+          return compiledOptions;
         } else {
-          options = this._formatOptions(options);
-          return this.httpService(options);
+          return this.httpService(compiledOptions)
+            .catch((err) => {
+              if (err.status < 0 || err.status === undefined) {
+                return this.makeRequest(path, options, requestRetryCount + 1);
+              } else {
+                throw err;
+              }
+            });
         }
       });
   }

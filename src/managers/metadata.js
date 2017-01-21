@@ -29,7 +29,6 @@ export default class Metadata extends Manager {
     let scope = super._getScope(options);
     let apiPath = `${BASE_PATH}/${scope}`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
-    options.header = options.header || {};
     return this.client.makeRequest(apiPath, options);
   }
 
