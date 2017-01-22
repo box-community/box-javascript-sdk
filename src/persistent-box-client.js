@@ -15,6 +15,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
     this.isPromise = config.isPromise || true;
     this.requestRetryTimes = config.retryTimes || 3;
     this.supportsStorage = this._storageAvailable(this.storage);
+    this.suppressExpiration = config.suppressExpiration || false;
   }
 
   _checkConfigForAccessTokenHandler(config) {
@@ -43,16 +44,18 @@ export default class PersistentBoxClient extends BaseBoxClient {
     let verifiedAccessTokenObject = {};
     if (typeof accessTokenObject === "string") {
       verifiedAccessTokenObject.accessToken = accessTokenObject;
-      verifiedAccessTokenObject.expiresAt = this._calculateTokenExpiration();
+      if (!this.suppressExpiration) {
+        verifiedAccessTokenObject.expiresAt = this._calculateTokenExpiration();
+      }
       return verifiedAccessTokenObject;
     }
     if (typeof accessTokenObject === "object" && (accessTokenObject.accessToken || accessTokenObject.access_token)) {
       verifiedAccessTokenObject.accessToken = accessTokenObject.accessToken || accessTokenObject.access_token;
     }
-    if (typeof accessTokenObject === "object" && (accessTokenObject.expiresAt || accessTokenObject.expires_at)) {
+    if (typeof accessTokenObject === "object" && !this.suppressExpiration && (accessTokenObject.expiresAt || accessTokenObject.expires_at)) {
       verifiedAccessTokenObject.expiresAt = accessTokenObject.expiresAt || accessTokenObject.expires_at;
     }
-    if (!verifiedAccessTokenObject.expiresAt) {
+    if (!this.suppressExpiration && !verifiedAccessTokenObject.expiresAt) {
       verifiedAccessTokenObject.expiresAt = this._calculateTokenExpiration();
     }
     return verifiedAccessTokenObject;
@@ -92,7 +95,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
         return new this.Promise((resolve, reject) => {
           return this._promisifyAccessTokenHandler(this.accessTokenHandler)
             .then((token) => {
-              token = this._verifyAccessTokenObject(token)
+              token = this._verifyAccessTokenObject(token);
               window[this.storage].setItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY, JSON.stringify(token));
               resolve(token);
             });
@@ -108,11 +111,6 @@ export default class PersistentBoxClient extends BaseBoxClient {
         });
       }
     }
-
-    // this._isExpired = (token) => {
-    //   let expiresAt = token.expires_at || token.expiresAt;
-    //   return (expiresAt < Date.now()) ? true : false;
-    // }
 
     return {
       accessToken: this._accessToken
