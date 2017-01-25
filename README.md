@@ -221,8 +221,8 @@ form.onsubmit = function (event) {
 
 
   boxClient.files.upload({ body: formData })
-    .then(function (resp) {
-      var newFile = resp.data;
+    .then(function (file) {
+      var newFile = file;
     })
     .catch(function (err) {
       console.log(err);
@@ -234,8 +234,9 @@ form.onsubmit = function (event) {
 var accessToken = "1234";
 var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
 boxClient.folders.get({ id: "0", params: {fields: "name,item_collection"} })
-  .then(function (resp) {
-    var rootFolder = resp.data;
+  .then(function (folder) {
+    var rootFolder = folder;
+    var id = folder.id;
   })
   .catch(function (err) {
     console.log(err);
@@ -248,8 +249,8 @@ var rootFolderId = "0";
 var folderName = "New Folder";
 var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
 boxClient.folders.create({ parent: { id: rootFolderId }, name: folderName })
-  .then(function (resp) {
-    var newFolder = resp.data;
+  .then(function (folder) {
+    var newFolder = folder;
   })
   .catch(function (err) {
     console.log(err);
@@ -261,8 +262,8 @@ var accessToken = "1234";
 var fileId = "8675309";
 var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
  boxClient.files.get({id: fileId})
-  .then(function (response) {
-    var file = response.data;
+  .then(function (file) {
+    var file = file;
   })
   .catch(function (err) {
     console.log(err);
@@ -274,8 +275,8 @@ var accessToken = "1234";
 var commentId = "42";
 var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
  boxClient.comments.get({id: commentId})
-  .then(function (response) {
-    var comment = response.data;
+  .then(function (comment) {
+    var comment = comment;
   })
   .catch(function (err) {
     console.log(err);
@@ -287,8 +288,8 @@ var accessToken = "1234";
 var fileId = "8675309";
 var boxClient = new box.BasicBoxClient({ accessToken: accessToken });
 boxClient.files.getEmbedLink({ id: fileId })
-  .then(function (response) {
-    var file = response.data;
+  .then(function (url) {
+    var file = url;
   });
   .catch(function (err) {
     console.log(err);
