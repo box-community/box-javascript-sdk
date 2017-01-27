@@ -169,7 +169,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
         } else {
           return this.httpService(compiledOptions)
             .catch((err) => {
-              if (err.status < 0 || err.status === undefined) {
+              if (!err || !err.response || err.response.status === undefined || err.response.status <= 0) {
                 return this.makeRequest(path, options, requestRetryCount + 1);
               } else {
                 throw err;
