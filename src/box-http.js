@@ -20,6 +20,8 @@ export default function BoxHttp(options) {
   }
 
   function parseJson(response) {
-    return response.json();
+    if (response.status !== 204) {
+      return response.json();
+    }
   }
 }
