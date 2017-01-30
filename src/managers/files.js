@@ -4,7 +4,7 @@ import VerifyRequiredValues from '../util/verify-required-values';
 import CreateRequestBody from '../util/create-request-body';
 import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
-import SHA1 from 'crypto-js/sha1';
+import generateMd5 from '../util/generate-md5';
 
 const BASE_PATH = '/files';
 const LOCK = 'lock';
@@ -118,27 +118,33 @@ export default class Files extends Manager {
     return this.client.makeRequest(null, options);
   }
 
-  // Do not use, a work in progress.
-  // uploadWithPreflightAndMd5(options) {
-  //   var sha1 = CryptoJS.algo.SHA1.create();
-  //   var read = 0;
-  //   var unit = 1024 * 1024;
-  //   var blob;
-  //   var reader = new FileReader();
-  //   reader.readAsArrayBuffer(file.slice(read, read + unit));
-  //   reader.onload = function (e) {
-  //     var bytes = CryptoJS.lib.WordArray.create(e.target.result);
-  //     sha1.update(bytes);
-  //     read += unit;
-  //     if (read < file.size) {
-  //       blob = file.slice(read, read + unit);
-  //       reader.readAsArrayBuffer(blob);
-  //     } else {
-  //       var hash = sha1.finalize();
-  //       var finalHash = hash.toString(CryptoJS.enc.Hex);
-  //     }
-  //   }
-  // }
+  // Be careful, this is an experimental and untested method.
+  // Use at your own risk!
+  uploadWithPreflightAndMd5(options) {
+    var file = options.file;
+    var formData = options.body;
+    var decorateOptions = JSON.parse(JSON.stringify(options));
+    return this.preflightCheck(options)
+      .then((resp) => {
+        if (resp.upload_url) {
+          decorateOptions.url = resp.upload_url;
+        }
+        return;
+      })
+      .then(() => {
+        if (file === undefined) {
+          throw new Error("Couldn't access file...");
+        }
+        return generateMd5(file);
+      })
+      .then((md5) => {
+        decorateOptions.headers = decorateOptions.headers || {};
+        decorateOptions.body = formData;
+        delete decorateOptions.file;
+        decorateOptions.headers["Content-MD5"] = md5;
+        return this.upload(decorateOptions);
+      });
+  }
 
   preflightCheck(options) {
     options = options || {};
