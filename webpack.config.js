@@ -8,7 +8,7 @@ var libraryName = 'BoxSdk';
 var plugins = [], outputFile;
 
 if (env === 'build') {
-  plugins.push(new UglifyJsPlugin({ minimize: true }));
+  plugins.push(new UglifyJsPlugin({ minimize: true, compress: { warnings: false } }));
   outputFile = libraryName + '.min.js';
 } else {
   outputFile = libraryName + '.js';

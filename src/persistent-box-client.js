@@ -100,7 +100,6 @@ export default class PersistentBoxClient extends BaseBoxClient {
               resolve(token);
             });
         });
-        return new this.Promise((resolve, reject) => { resolve(this._verifyAccessTokenObject(boxToken)); });
       } else {
         return new this.Promise((resolve, reject) => {
           return this._promisifyAccessTokenHandler(this.accessTokenHandler)

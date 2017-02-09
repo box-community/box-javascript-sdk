@@ -25,13 +25,13 @@ export default function BoxHttp(options) {
           resolve(JSON.parse(this.response));
         } else {
           var error = new Error(this.statusText);
-          error.response = this.response;
+          error.response = JSON.parse(this.response);
           reject(error);
         }
       }
       client.onerror = function () {
         var error = new Error(this.statusText);
-        error.response = this.response;
+        error.response = JSON.parse(this.response);
         reject(error);
       }
     });
