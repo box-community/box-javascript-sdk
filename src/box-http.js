@@ -43,8 +43,11 @@ export default function BoxHttp(options) {
   function handleErrors(response) {
     if (!response.ok) {
       var error = new Error(response.statusText)
-      error.response = response
-      throw error;
+      return response.json()
+        .then((body) => {
+          error.response = body;
+          throw error;
+        });
     }
     return response;
   }

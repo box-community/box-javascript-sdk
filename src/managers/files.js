@@ -5,6 +5,7 @@ import CreateRequestBody from '../util/create-request-body';
 import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
 import generateMd5 from '../util/generate-md5';
+import checkForFormData from '../util/check-for-form-data';
 
 const BASE_PATH = '/files';
 const LOCK = 'lock';
@@ -118,9 +119,22 @@ export default class Files extends Manager {
     return this.client.makeRequest(null, options);
   }
 
+  uploadNewFileVersion(options) {
+    if (!checkForFormData()) {
+      throw new Error("Form Data not supported. The uploadNewFileVersion requires Form Data in the browser.");
+    }
+    options = options || {};
+    let fileId = options.body.get("id") || options.body.get("fileId") || options.body.get("file_id");
+    options.url = options.url || `${UPLOAD_PATH}/files/${fileId}/content`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
+    options.upload = true;
+    return this.client.makeRequest(null, options);
+  }
+
   // Be careful, this is an experimental and untested method.
   // Use at your own risk!
   uploadWithPreflightAndMd5(options) {
+    options = options || {};
     var file = options.file;
     var formData = options.body;
     var decorateOptions = JSON.parse(JSON.stringify(options));
@@ -146,6 +160,37 @@ export default class Files extends Manager {
       });
   }
 
+  uploadNewFileVersionWithPreflighAndMd5(options) {
+    if (!checkForFormData()) {
+      throw new Error("Form Data not supported. The uploadNewFileVersion requires Form Data in the browser.");
+    }
+    options = options || {};
+    let file = options.file;
+    let formData = options.body;
+    let decorateOptions = JSON.parse(JSON.stringify(options));
+    options.fileId = options.body.get("id") || options.body.get("fileId") || options.body.get("file_id");
+    return this.preflightCheckNewFileVersion(options)
+      .then((resp) => {
+        if (resp.upload_url) {
+          decorateOptions.url = resp.upload_url;
+        }
+        return;
+      })
+      .then(() => {
+        if (file === undefined) {
+          throw new Error("Couldn't access file...");
+        }
+        return generateMd5(file);
+      })
+      .then((md5) => {
+        decorateOptions.headers = decorateOptions.headers || {};
+        decorateOptions.body = formData;
+        delete decorateOptions.file;
+        decorateOptions.headers["Content-MD5"] = md5;
+        return this.uploadNewFileVersion(decorateOptions);
+      });
+  }
+
   preflightCheck(options) {
     options = options || {};
     if (!this.client._simpleMode) {
@@ -156,6 +201,21 @@ export default class Files extends Manager {
       this._getFile(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
     }
     let apiPath = `${BASE_PATH}/content`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.OPTIONS;
+    return this.client.makeRequest(apiPath, options);
+  }
+
+  preflightCheckNewFileVersion(options) {
+    options = options || {};
+    let fileId = super._getFileId(options);
+    if (!this.client._simpleMode) {
+      const REQUIRED_VALUES = [MODEL_VALUES.SIZE, MODEL_VALUES.NAME];
+      let skipValidation = super._setSkipValidation(options);
+      let ignoreModelValues = super._setIgnoreModelValues(options);
+
+      this._getFile(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
+    }
+    let apiPath = `${BASE_PATH}/${fileId}/content`;
     options.method = BOX_CONSTANTS.HTTP_VERBS.OPTIONS;
     return this.client.makeRequest(apiPath, options);
   }
