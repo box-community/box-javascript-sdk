@@ -25,6 +25,10 @@ var config = {
     umdNamedDefine: true,
     sourceMapFilename: libraryName + '.map'
   },
+  externals: {
+    "whatwg-fetch": "fetch",
+    "Promise": "Promise"
+  },
   module: {
     loaders: [
       {
