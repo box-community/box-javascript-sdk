@@ -165,6 +165,8 @@ export default class PersistentBoxClient extends BaseBoxClient {
             delete compiledOptions.upload;
           }
           return compiledOptions;
+        } else if (this.httpService.defaults && options.upload) {
+          return this._handleAngularFileUpload(this.httpService, compiledOptions);
         } else {
           return this.httpService(compiledOptions)
             .catch((err) => {

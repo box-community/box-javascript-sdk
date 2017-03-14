@@ -21,6 +21,8 @@ export default class BasicBoxClient extends BaseBoxClient {
         delete options.upload;
       }
       return options;
+    } else if (this.httpService.defaults && options.upload) {
+      return this._handleAngularFileUpload(this.httpService, options);
     }
     return this.httpService(options);
   }

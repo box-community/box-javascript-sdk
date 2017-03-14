@@ -199,4 +199,11 @@ export default class BaseBoxClient {
     formattedOptions.mode = 'cors';
     return formattedOptions;
   }
+
+  _handleAngularFileUpload($http, options) {
+    options.headers['Content-Type'] = undefined;
+    return $http.post(options.url, options.body, {
+      headers: options.headers
+    });
+  }
 }
