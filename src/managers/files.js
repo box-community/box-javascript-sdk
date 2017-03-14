@@ -137,8 +137,9 @@ export default class Files extends Manager {
     options = options || {};
     var file = options.file;
     var formData = options.body;
+    var preflightOptions = { name: options.name, parent: options.parent, size: options.file.size }
     var decorateOptions = JSON.parse(JSON.stringify(options));
-    return this.preflightCheck(options)
+    return this.preflightCheck(preflightOptions)
       .then((resp) => {
         if (resp.upload_url) {
           decorateOptions.url = resp.upload_url;

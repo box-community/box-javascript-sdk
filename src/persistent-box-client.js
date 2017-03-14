@@ -128,6 +128,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
       if (boxToken && !this._isExpired(boxToken) && requestRetryCount === 0) {
         return new this.Promise((resolve, reject) => { resolve(boxToken) });
       } else {
+        window[this.storage].removeItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY);
         return this.accessTokenStore.accessToken();
       }
     } else {
@@ -170,7 +171,11 @@ export default class PersistentBoxClient extends BaseBoxClient {
         } else {
           return this.httpService(compiledOptions)
             .catch((err) => {
-              if (!err || !err.response || err.response.status === undefined || err.response.status <= 0) {
+              var status = err.status || err.response.status;
+              if (status === undefined || status <= 0) {
+                if (this.supportsStorage && !this.disableStorage) {
+                  window[this.storage].removeItem(BOX_CONSTANTS.BOX_TOKEN_STORAGE_KEY);
+                }
                 return this.makeRequest(path, options, requestRetryCount + 1);
               } else {
                 throw err;
