@@ -35,6 +35,34 @@ export default function BoxHttp(options) {
         reject(error);
       }
     });
+  } else if (options.chunkedUpload) {
+    return new Promise((resolve, reject) => {
+      let client = new XMLHttpRequest();
+      let uri = options.url;
+      let method = options.method;
+
+      client.open(method, uri, true);
+      Object.keys(options.headers).forEach((key) => {
+        client.setRequestHeader(key, options.headers[key]);
+      });
+      client.send(options.body);
+      client.onload = function () {
+        if (this.status >= 200 && this.status < 300) {
+          resolve(JSON.parse(this.response));
+        } else {
+          var error = new Error(this.statusText);
+          error.response = JSON.parse(this.response);
+          reject(error);
+        }
+      }
+      client.onerror = function () {
+        var error = new Error(this.statusText);
+        if (err.response) {
+          error.response = JSON.parse(this.response);
+        }
+        reject(error);
+      }
+    });
   } else {
     return fetch(options.url, options)
       .then(handleErrors)

@@ -168,6 +168,8 @@ export default class PersistentBoxClient extends BaseBoxClient {
           return compiledOptions;
         } else if (this.httpService.defaults && options.upload) {
           return this._handleAngularFileUpload(this.httpService, compiledOptions);
+        } else if (this.httpService.defaults && options.chunkedUpload) {
+          return this._handleAngularFileChunkedUpload(this.httpService, options);
         } else {
           return this.httpService(compiledOptions)
             .catch((err) => {
