@@ -313,3 +313,55 @@ client.metadata.createFileMetadata({
   templateKey: "customer"
 })
 ```
+### Upload File Greater than 50MB with Chunking
+#### Please note: This method has not undergone signficant testing. Please use at your own risk.
+```javascript
+var accessToken = "1234";
+// Must be an HTML5 File object
+var file = new File([], "test.iso");
+var box = new BoxSdk();
+var client = new box.BasicBoxClient({ accessToken: accessToken });
+client.files..chunkedUpload({
+    file: file,
+    name: "test.iso",
+    parentFolder: { id: "0" },
+    listeners: {
+        // Register a listener for receiving a percentage of SHA1 processed parts and uploaded parts
+        handleProgressUpdates: function (e) {
+            console.log("Progress captured...");
+            console.log("Percentage processed: ");
+            console.log(e.detail.progress.percentageProcessed);
+            console.log("Percentage uploaded: ");
+            console.log(e.detail.progress.percentageUploaded);
+        },
+        // Register a listener for a failure event
+        getFailureNotification: function (e) {
+            console.log("Failed!");
+            console.log(e.detail.progress.didFail)
+        },
+        // Register a listener for a success event
+        getSuccessNotification: function (e) {
+            console.log("Success!");
+            console.log(e.detail.progress.didSucceed)
+        },
+        // Register a listener for when the upload process starts
+        getStartNotification: function (e) {
+            console.log("Upload started!");
+            console.log(e.detail.progress.didStart)
+        },
+        // Register a listener for when all parts are uploaded and the entire file is committed to Box
+        getFileCommitNotification: function (e) {
+            console.log("File committed!");
+            console.log(e.detail.progress.didFileCommit)
+        },
+        // Register a listener for the completion event -- with either a success or failure outcome
+        getCompletedNotification: function (e) {
+            console.log("Upload completed!");
+            console.log(e.detail.progress.isComplete)
+        }
+    }
+})
+.then(function (fileCollection) {
+    console.log(fileCollection);
+  });
+```

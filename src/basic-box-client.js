@@ -23,8 +23,11 @@ export default class BasicBoxClient extends BaseBoxClient {
       return options;
     } else if (this.httpService.defaults && options.upload) {
       return this._handleAngularFileUpload(this.httpService, options);
+    } else if (this.httpService.defaults && options.chunkedUpload) {
+      return this._handleAngularFileChunkedUpload(this.httpService, options);
+    } else {
+      return this.httpService(options);
     }
-    return this.httpService(options);
   }
 
   removeAccessTokenAndRerunRequest(options, accessToken, setAsNewAccessToken) {
