@@ -321,7 +321,7 @@ var accessToken = "1234";
 var file = new File([], "test.iso");
 var box = new BoxSdk();
 var client = new box.BasicBoxClient({ accessToken: accessToken });
-client.files..chunkedUpload({
+client.files.chunkedUpload({
     file: file,
     name: "test.iso",
     parentFolder: { id: "0" },
