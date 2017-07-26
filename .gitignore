@@ -2,6 +2,7 @@ node_modules/
 
 server/
 dist/
+lib/
 test.js
 gulpfile.js
 npm-debug.log

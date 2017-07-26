@@ -182,7 +182,8 @@ export default class ChunkedUploader {
             self.parts.push({
                 part: part,
                 contentRange: `bytes ${position}-${contentRangeHigh}/${self.file.size}`,
-                digest: ""
+                digest: "",
+                uploaded: false
             })
             position += self.session.partSize;
         }
@@ -197,42 +198,45 @@ export default class ChunkedUploader {
 
         this.parts.forEach(function (part) {
             let blob = part.part;
-            tasks.push(self.filesManager.createSHA1Hash(blob)
-                .then(function (hash) {
-                    processedCount++;
-                    if (self.handleProgressUpdates !== null) {
-                        self.progress.percentageProcessed = (processedCount / (self.session.totalParts)).toFixed(2);
-                        self.fireEvent(self.progress, PROGRESS_EVENT_NAME);
-                    }
-                    part.digest = hash;
-                    let options = {};
-                    options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
-                    options.url = self.session.endpoints.uploadPart;
-                    options.headers = {
-                        "Digest": `sha=${hash}`,
-                        "Content-Range": part.contentRange,
-                        "Content-Type": "application/octet-stream"
-                    };
-                    options.body = part.part;
-                    options.chunkedUpload = true;
-                    return self.client.makeRequest(null, options);
-                })
-                .then(function (resp) {
-                    uploadCount++;
-                    if (self.handleProgressUpdates !== null) {
-                        self.progress.percentageUploaded = (uploadCount / (self.session.totalParts)).toFixed(2);
-                        self.fireEvent(self.progress, PROGRESS_EVENT_NAME);
-                    }
-                    if (resp.data) {
-                        resp = resp.data;
-                    }
-                    part.response = resp;
-                }));
+            if (!part.uploaded) {
+                tasks.push(self.filesManager.createSHA1Hash(blob)
+                    .then(function (hash) {
+                        processedCount++;
+                        if (self.handleProgressUpdates !== null) {
+                            self.progress.percentageProcessed = (processedCount / (self.session.totalParts)).toFixed(2);
+                            self.fireEvent(self.progress, PROGRESS_EVENT_NAME);
+                        }
+                        part.digest = hash;
+                        let options = {};
+                        options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
+                        options.url = self.session.endpoints.uploadPart;
+                        options.headers = {
+                            "Digest": `sha=${hash}`,
+                            "Content-Range": part.contentRange,
+                            "Content-Type": "application/octet-stream"
+                        };
+                        options.body = part.part;
+                        options.chunkedUpload = true;
+                        return self.client.makeRequest(null, options);
+                    })
+                    .then(function (resp) {
+                        uploadCount++;
+                        if (self.handleProgressUpdates !== null) {
+                            self.progress.percentageUploaded = (uploadCount / (self.session.totalParts)).toFixed(2);
+                            self.fireEvent(self.progress, PROGRESS_EVENT_NAME);
+                        }
+                        if (resp.data) {
+                            resp = resp.data;
+                        }
+                        part.response = resp;
+                        part.uploaded = true;
+                    }));
+            }
         });
         return Promise.all(tasks)
             .catch(function (e) {
                 if (e && e.status && e.status !== 416) {
-                    while (self.retry < 3) {
+                    while (self.retry < 2) {
                         self.processChunks();
                     }
                 } else {
