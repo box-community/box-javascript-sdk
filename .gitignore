@@ -1,8 +1,6 @@
 node_modules/
 
-lib/
 server/
-build/
 dist/
 test.js
 gulpfile.js
