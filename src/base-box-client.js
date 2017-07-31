@@ -143,7 +143,7 @@ export default class BaseBoxClient {
 
   _checkForEmptyObjects(options) {
     Object.keys(options).map((field) => {
-      if (field !== "body" && field !== "upload" && field !== "chunkedUpload" && this._isEmpty(options[field])) {
+      if (field !== "body" && field !== "upload" && field !== "chunkedUpload" && field !== "useXHR" && field !== "returnCancelToken" && field !== "returnsOnlyOptions" && this._isEmpty(options[field])) {
         delete options[field];
       }
     });
@@ -173,6 +173,8 @@ export default class BaseBoxClient {
     }
 
     let formattedOptions = {};
+    (options.useXHR) ? formattedOptions.useXHR = true : null;
+    (options.returnCancelToken) ? formattedOptions.returnCancelToken = true : null;
     let uri = options.url;
 
     if (options.params) {
@@ -206,12 +208,6 @@ export default class BaseBoxClient {
   _handleAngularFileUpload($http, options) {
     options.headers['Content-Type'] = undefined;
     return $http.post(options.url, options.body, {
-      headers: options.headers
-    });
-  }
-
-  _handleAngularFileChunkedUpload($http, options) {
-    return $http.put(options.url, options.body, {
       headers: options.headers
     });
   }

@@ -7,12 +7,14 @@ var libraryName = 'BoxSdk';
 
 var plugins = [], outputFile;
 
-if (env === 'build') {
-  plugins.push(new UglifyJsPlugin({ minimize: true, compress: { warnings: false } }));
-  outputFile = libraryName + '.min.js';
-} else {
-  outputFile = libraryName + '.js';
-}
+outputFile = libraryName + '.min.js';
+plugins.push(new UglifyJsPlugin({
+  sourceMap: true,
+  uglifyOptions: {
+    compress: { warnings: false },
+    ecma: 5
+  }
+}));
 
 var config = {
   entry: __dirname + '/src/sdk.js',
@@ -30,22 +32,26 @@ var config = {
     "Promise": "Promise"
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /(\.jsx|\.js)$/,
-        loader: 'babel',
-        exclude: /(node_modules|bower_components)/
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+        }
       },
       {
         test: /(\.jsx|\.js)$/,
-        loader: "eslint-loader",
-        exclude: /node_modules/
+        exclude: /node_modules/,
+        use: {
+          loader: "eslint-loader"
+        }
       }
     ]
   },
   resolve: {
-    root: path.resolve('./src'),
-    extensions: ['', '.js']
+    modules: [__dirname, 'node_modules'],
+    extensions: ['.js']
   },
   plugins: plugins
 };

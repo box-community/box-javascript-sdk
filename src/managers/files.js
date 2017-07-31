@@ -5,8 +5,8 @@ import VerifyRequiredValues from '../util/verify-required-values';
 import CreateRequestBody from '../util/create-request-body';
 import NormalizeObjectKeys from '../util/normalize-object-keys';
 import Manager from './manager';
-import generateMd5 from '../util/generate-md5';
 import generateSHA1 from '../util/generate-sha1';
+import generateMD5 from '../util/generate-md5';
 import checkForFormData from '../util/check-for-form-data';
 
 const BASE_PATH = '/files';
@@ -171,7 +171,7 @@ export default class Files extends Manager {
         if (file === undefined) {
           throw new Error("Couldn't access file...");
         }
-        return generateMd5(file);
+        return generateMD5(file);
       })
       .then((md5) => {
         decorateOptions.headers = decorateOptions.headers || {};
@@ -182,7 +182,7 @@ export default class Files extends Manager {
       });
   }
 
-  uploadNewFileVersionWithPreflighAndMd5(options) {
+  uploadNewFileVersionWithPreflightAndMd5(options) {
     if (!checkForFormData()) {
       throw new Error("Form Data not supported. The uploadNewFileVersion requires Form Data in the browser.");
     }
@@ -202,7 +202,7 @@ export default class Files extends Manager {
         if (file === undefined) {
           throw new Error("Couldn't access file...");
         }
-        return generateMd5(file);
+        return generateMD5(file);
       })
       .then((md5) => {
         decorateOptions.headers = decorateOptions.headers || {};
