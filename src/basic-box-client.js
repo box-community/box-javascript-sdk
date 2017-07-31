@@ -15,7 +15,7 @@ export default class BasicBoxClient extends BaseBoxClient {
     options.params = this._applyFields(options);
     this._checkForEmptyObjects(options);
     options = this._formatOptions(options);
-    if (this._returnsOnlyOptions) {
+    if (this._returnsOnlyOptions || options.returnsOnlyOptions) {
       if (options.upload) {
         options.headers["Content-Type"] = undefined;
         delete options.upload;
@@ -23,8 +23,6 @@ export default class BasicBoxClient extends BaseBoxClient {
       return options;
     } else if (this.httpService.defaults && options.upload) {
       return this._handleAngularFileUpload(this.httpService, options);
-    } else if (this.httpService.defaults && options.chunkedUpload) {
-      return this._handleAngularFileChunkedUpload(this.httpService, options);
     } else {
       return this.httpService(options);
     }

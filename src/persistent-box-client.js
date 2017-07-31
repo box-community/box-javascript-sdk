@@ -160,7 +160,7 @@ export default class PersistentBoxClient extends BaseBoxClient {
     }
     return this.reauth(path, options, requestRetryCount)
       .then((compiledOptions) => {
-        if (this._returnsOnlyOptions) {
+        if (this._returnsOnlyOptions || options.returnsOnlyOptions) {
           if (compiledOptions.upload) {
             compiledOptions.headers["Content-Type"] = undefined;
             delete compiledOptions.upload;
@@ -168,8 +168,6 @@ export default class PersistentBoxClient extends BaseBoxClient {
           return compiledOptions;
         } else if (this.httpService.defaults && options.upload) {
           return this._handleAngularFileUpload(this.httpService, compiledOptions);
-        } else if (this.httpService.defaults && options.chunkedUpload) {
-          return this._handleAngularFileChunkedUpload(this.httpService, options);
         } else {
           return this.httpService(compiledOptions)
             .catch((err) => {

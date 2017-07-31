@@ -313,6 +313,76 @@ client.metadata.createFileMetadata({
   templateKey: "customer"
 })
 ```
+### Upload with Preflight and MD5 check
+#### Please note: This method has not undergone signficant testing. Please use at your own risk.
+```javascript
+var accessToken = "1234"; 
+var form = document.getElementById('file-form');
+var fileSelect = document.getElementById('file-select');
+var uploadButton = document.getElementById('upload-button');
+
+form.onsubmit = function(event){
+  event.preventDefault();
+  uploadButton.innerHTML = 'Uploading...';
+  var files = fileSelect.files;
+  var formData = new FormData();
+
+  var box = new BoxSdk();
+  var client = new box.BasicBoxClient({accessToken: accessToken});
+
+  formData.append('files', files[0], files[0].name);
+  formData.append('parent_id', '0');
+
+  client.files.uploadWithPreflightAndMd5({ 
+    body: formData, 
+    name: files[0].name, 
+    file: files[0], 
+    parent: { id: "0"}, 
+    size: files[0].size 
+  })
+  .then(function (file) {
+    var newFile = file;
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
+### Upload New Version with Preflight and MD5 check
+#### Please note: This method has not undergone signficant testing. Please use at your own risk.
+```javascript
+var accessToken = "1234"; 
+
+var form = document.getElementById('file-form');
+var fileSelect = document.getElementById('file-select');
+var uploadButton = document.getElementById('upload-button');
+
+form.onsubmit = function(event){
+  event.preventDefault();
+  uploadButton.innerHTML = 'Uploading...';
+  var files = fileSelect.files;
+  var formData = new FormData();
+
+  var box = new BoxSdk();
+  var client = new box.BasicBoxClient({accessToken: accessToken});
+
+  formData.append('files', files[0], files[0].name);
+  formData.append('parent_id', '0');
+  formData.append('id', '204457430882');
+
+  client.files.uploadNewFileVersionWithPreflightAndMd5({ 
+    body: formData, 
+    name: files[0].name, 
+    file: files[0], 
+    parent: { id: "0"}, 
+    size: files[0].size 
+  })
+  .then(function (file) {
+    var newFile = file;
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
 ### Upload File Greater than 50MB with Chunking
 #### Please note: This method has not undergone signficant testing. Please use at your own risk.
 ```javascript
@@ -320,7 +390,17 @@ var accessToken = "1234";
 // Must be an HTML5 File object
 var file = new File([], "test.iso");
 var box = new BoxSdk();
+
+// Uses XHR to perform chunked upload
 var client = new box.BasicBoxClient({ accessToken: accessToken });
+
+// If you want to use Angular services for chunked upload, you must include both the Angular HTTP service and the Angular Promise service:
+var client = new box.PersistentBoxClient({ accessTokenHandler: accessTokenHandler, httpService: $http, Promise: $q });
+
+// Cancel an upload by firing this event:
+var abortEvt = new Event("boxChunkedUploadAbortUpload");
+dispatchEvent(abortEvt);
+
 client.files.chunkedUpload({
     file: file,
     name: "test.iso",
@@ -348,6 +428,10 @@ client.files.chunkedUpload({
         getStartNotification: function (e) {
             console.log("Upload started!");
             console.log(e.detail.progress.didStart)
+        },
+        // Register a listener for when a commit has a retry needed
+        getFileCommitRetryNotification: function (e) {
+          console.log("File commit retry needed!");
         },
         // Register a listener for when all parts are uploaded and the entire file is committed to Box
         getFileCommitNotification: function (e) {
