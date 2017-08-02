@@ -10,11 +10,12 @@ const START_CANCELLING_EVENT_NAME = "boxChunkedUploadStartCancelling";
 const END_CANCELLING_EVENT_NAME = "boxChunkedUploadEndCancelling";
 const ABORT_UPLOAD_EVENT_NAME = "boxChunkedUploadAbortUpload";
 export default class ChunkedUploader {
-    constructor(filesManager, fileName, file, parentFolder, listeners) {
+    constructor(filesManager, fileName, file, parentFolder, listeners, newVersionFileId) {
         this.filesManager = filesManager
         this.client = filesManager.client;
         this.file = file;
-        this.fileName = fileName
+        this.fileName = fileName;
+        this.newVersionFileId = newVersionFileId || "";
         this.parts = [];
         this.tasks = [];
         this.partRequestCancellations = [];
@@ -222,12 +223,21 @@ export default class ChunkedUploader {
         let options = {};
         let self = this;
         options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
-        options.url = `${this.filesManager.UPLOAD_PATH}/files/upload_sessions`;
-        options.body = {
-            folder_id: this.parentFolder.id,
-            file_size: this.file.size,
-            file_name: this.fileName
+        if (self.newVersionFileId) {
+            options.url = `${this.filesManager.UPLOAD_PATH}/files/${self.newVersionFileId}/upload_sessions`;
+            options.body = {
+                file_size: this.file.size,
+                file_name: this.fileName
+            }
+        } else {
+            options.url = `${this.filesManager.UPLOAD_PATH}/files/upload_sessions`;
+            options.body = {
+                folder_id: this.parentFolder.id,
+                file_size: this.file.size,
+                file_name: this.fileName
+            }
         }
+
         if (!this.client.httpService.defaults) {
             options.useXHR = true;
         }

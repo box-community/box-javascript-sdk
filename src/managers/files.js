@@ -132,6 +132,25 @@ export default class Files extends Manager {
     return session.startSession();
   }
 
+  // Be careful, this is an experimental and untested method.
+  // Use at your own risk!
+  // Tested lightly with Angular 1 and vanilla JS in lastest build of Chrome Version 59.0.3071.115 on MacOS
+  chunkedUploadNewFileVersion(options) {
+    options = options || {};
+    if(!options.id) {
+      throw new Error("chunkedUploadNewVersion requires an existing file ID");
+    }
+    if (!options.file) {
+      throw new Error("Must make this call with an HTML5 File object.");
+    }
+    if (options.file && options.file.size < MINIMUM_CHUNKED_FILE_SIZE) {
+      throw new Error("File size less than minimum allowed for this API: 50000000");
+    }
+    options.name = options.name || options.file.name;
+    let session = new ChunkedUploader(this, options.name, options.file, options.parentFolder, options.listeners, options.id);
+    return session.startSession();
+  }
+
   upload(options) {
     options = options || {};
     options.url = options.url || `${UPLOAD_PATH}/files/content`;
