@@ -119,8 +119,8 @@ export default class Folders extends Manager {
     if (!this.client._simpleMode) {
       let skipValidation = super._setSkipValidation(options);
       let ignoreModelValues = super._setIgnoreModelValues(options);
-
-      this._getFolder(options, [REQUIRED_VALUES.PARENT, REQUIRED_VALUES.ID], skipValidation, ignoreModelValues);
+      const REQUIRED_VALUES = [MODEL_VALUES.PARENT, MODEL_VALUES.ID];
+      this._getFolder(options, REQUIRED_VALUES, skipValidation, ignoreModelValues);
 
       if (options.newName) {
         options.body.name = options.newName;
