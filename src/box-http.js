@@ -87,7 +87,7 @@ export default function BoxHttp(options) {
             headers: headers,
             status: this.status
           }
-          resolve(builtResponse);
+          resolve(constructResponse(builtResponse));
         } else {
           var error = new Error(this.statusText);
           error.status = this.status;
