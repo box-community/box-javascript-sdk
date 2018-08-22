@@ -161,14 +161,34 @@ export default function BoxHttp(options) {
       return new Promise(function (resolve, reject) {
         buildResponse.headers = response.headers;
         buildResponse.status = response.status;
-        return response.json().catch(() => { return {}; })
-          .then(function (body) {
-            buildResponse.data = body;
-            resolve(buildResponse);
-          })
+        if (checkForJSONResponse(response)) {
+          return response.json().catch(() => { return {}; })
+            .then(function (body) {
+              buildResponse.data = body;
+              resolve(buildResponse);
+            })
+        } else if (checkForDataResponse(response)) {
+          return new Promise(function (resolve, reject) {
+            resolve(response.data);
+          });
+        } else {
+          resolve(buildResponse);
+        }
       });
     } else {
-      return response.json().catch(() => { return {}; });
+      console.log("Response received...");
+      console.log(response);
+      if (checkForJSONResponse(response)) {
+        return response.json().catch(() => { return {}; });
+      } else if (checkForDataResponse(response)) {
+        return new Promise(function (resolve, reject) {
+          resolve(response.data);
+        });
+      } else {
+        return new Promise(function (resolve, reject) {
+          resolve({});
+        });
+      }
     }
   }
 
@@ -188,5 +208,12 @@ export default function BoxHttp(options) {
       }
     }
     return headers;
+  }
+
+  function checkForJSONResponse(response) {
+    return (response.json && typeof response.json === 'function') ? true : false;
+  }
+  function checkForDataResponse(response) {
+    return (response.data && typeof response.data === 'object') ? true : false;
   }
 }
