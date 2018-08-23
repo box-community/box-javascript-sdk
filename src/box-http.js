@@ -169,15 +169,14 @@ export default function BoxHttp(options) {
             })
         } else if (checkForDataResponse(response)) {
           return new Promise(function (resolve, reject) {
-            resolve(response.data);
+            buildResponse.data = response.data;
+            resolve(buildResponse);
           });
         } else {
           resolve(buildResponse);
         }
       });
     } else {
-      console.log("Response received...");
-      console.log(response);
       if (checkForJSONResponse(response)) {
         return response.json().catch(() => { return {}; });
       } else if (checkForDataResponse(response)) {
