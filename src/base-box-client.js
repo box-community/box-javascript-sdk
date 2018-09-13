@@ -143,7 +143,14 @@ export default class BaseBoxClient {
 
   _checkForEmptyObjects(options) {
     Object.keys(options).map((field) => {
-      if (field !== "body" && field !== "upload" && field !== "chunkedUpload" && field !== "useXHR" && field !== "returnCancelToken" && field !== "returnsOnlyOptions" && this._isEmpty(options[field])) {
+      if (field !== "body" && 
+          field !== "upload" && 
+          field !== "chunkedUpload" && 
+          field !== "useXHR" && 
+          field !== "returnCancelToken" && 
+          field !== "returnsOnlyOptions" && 
+          field !== "includeFullResponse" && 
+          this._isEmpty(options[field])) {
         delete options[field];
       }
     });

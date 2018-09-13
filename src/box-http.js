@@ -60,7 +60,7 @@ export default function BoxHttp(options) {
   } else if (!options.useXHR && window && window.fetch) {
     return fetch(options.url, options)
       .then(handleErrors)
-      .then(constructResponse);
+      .then(constructResponse, options);
   }
   else {
     let client = new XMLHttpRequest();
@@ -87,7 +87,7 @@ export default function BoxHttp(options) {
             headers: headers,
             status: this.status
           }
-          resolve(constructResponse(builtResponse));
+          resolve(constructResponse(builtResponse, options));
         } else {
           var error = new Error(this.statusText);
           error.status = this.status;
@@ -151,8 +151,13 @@ export default function BoxHttp(options) {
     return response;
   }
 
-  function constructResponse(response) {
-    if (options.includeFullResponse) {
+  function constructResponse(response, options) {
+    if (options && options.includeFullResponse) {
+      if (response.data && response.headers && response.status) {
+        return new Promise(function (resolve, reject) {
+          resolve(response);
+        });
+      }
       let buildResponse = {
         data: {},
         headers: {},

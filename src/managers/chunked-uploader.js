@@ -370,6 +370,7 @@ export default class ChunkedUploader {
                     }
                 })
                 .then(function (opts) {
+                    opts.includeFullResponse = true;
                     if (self.isCancelled) throw new Error("Upload cancelled");
                     if (self.filesManager.client.httpService.defaults && self.filesManager.client.Promise.defer) {
                         let canceller = self.filesManager.client.Promise.defer();
@@ -400,7 +401,6 @@ export default class ChunkedUploader {
                 })
                 .then(function (resp) {
                     if (self.isCancelled) throw new Error("Upload cancelled");
-                    if (!resp) return;
                     self.uploadCount++;
                     if (self.handleProgressUpdates !== null) {
                         self.progress.percentageUploaded = (self.uploadCount / (self.session.totalParts)).toFixed(2);
@@ -458,6 +458,7 @@ export default class ChunkedUploader {
                 options.body = {
                     parts: orderedParts
                 }
+                options.includeFullResponse = true;
                 if (self.filesManager.client.httpService.defaults) {
                     return self.client.makeRequest(null, options);
                 } else {
