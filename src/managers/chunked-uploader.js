@@ -450,6 +450,7 @@ export default class ChunkedUploader {
                     orderedParts.push(part.response.part);
                 });
                 let options = {};
+                options.chunkedUpload = true;
                 options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
                 options.url = self.session.endpoints.commit;
                 options.headers = {
