@@ -456,9 +456,9 @@ export default class ChunkedUploader {
                 options.headers = {
                     "Digest": `sha=${hash}`
                 };
-                options.body = {
+                options.body = JSON.stringify({
                     parts: orderedParts
-                }
+                });
                 options.includeFullResponse = true;
                 if (self.filesManager.client.httpService.defaults) {
                     return self.client.makeRequest(null, options);
