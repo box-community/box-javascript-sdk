@@ -341,6 +341,14 @@ export default class Files extends Manager {
     return this.client.makeRequest(apiPath, options);
   }
 
+  getCollaborations(options) {
+    options = super._objectifyString(options) || {};
+    let fileId = super._getFileId(options);
+    let apiPath = `${BASE_PATH}/${fileId}/collaborations`;
+    options.method = BOX_CONSTANTS.HTTP_VERBS.GET;
+    return this.client.makeRequest(apiPath, options);
+  }
+
   createSharedLink(options) {
     options = options || {};
     let fileId = super._getFileId(options);
