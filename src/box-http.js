@@ -140,12 +140,18 @@ export default function BoxHttp(options) {
   }
   function handleErrors(response) {
     if (!response.ok) {
-      var error = new Error(response.statusText)
-      return response.json().catch(() => { return {}; })
-        .then((body) => {
-          error.response = body;
-          throw error;
-        })
+      var error = new Error(response.statusText);
+      if (response)
+        return response.json().catch(() => { return {}; })
+          .then((body) => {
+            error.response = {};
+            if (Object.keys(body).length === 0) {
+              error.response = response
+            } else {
+              error.response = body;
+            }
+            throw error;
+          })
 
     }
     return response;
