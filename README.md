@@ -313,6 +313,33 @@ client.metadata.createFileMetadata({
   templateKey: "customer"
 })
 ```
+### Upload New Version and Rename File
+```javascript
+var accessToken = "1234"; 
+var form = document.getElementById('file-form');
+var fileSelect = document.getElementById('file-select');
+var uploadButton = document.getElementById('upload-button');
+
+form.onsubmit = function(event){
+  event.preventDefault();
+  uploadButton.innerHTML = 'Uploading...';
+  var files = fileSelect.files;
+  var formData = new FormData();
+
+  var box = new BoxSdk();
+  var client = new box.BasicBoxClient({accessToken: accessToken});
+
+  var formData = new FormData();
+  formData.append('file', files[0]);
+  formData.append('id', '335561149042');
+  formData.append('attributes', '{"name": "newlaser.jpg"}');
+
+client.files.uploadNewFileVersion({ body: formData })
+  .then(file => console.log(file))
+  .catch(e => console.log(e));
+
+}
+```
 ### Upload with Preflight and MD5 check
 #### Please note: This method has not undergone signficant testing. Please use at your own risk.
 ```javascript
@@ -346,6 +373,8 @@ form.onsubmit = function(event){
   .catch(function (err) {
     console.log(err);
   });
+  
+}
 ```
 ### Upload New Version with Preflight and MD5 check
 #### Please note: This method has not undergone signficant testing. Please use at your own risk.
