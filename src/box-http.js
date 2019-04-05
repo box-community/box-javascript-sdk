@@ -6,7 +6,7 @@ export default function BoxHttp(options) {
     // Workaround for upload with Fetch library for now...
     // https://github.com/whatwg/fetch/issues/380
     return new Promise((resolve, reject) => {
-      let client = new XMLHttpRequest();
+      const client = new XMLHttpRequest();
       let uri = options.url;
       let method = options.method;
 
@@ -21,38 +21,14 @@ export default function BoxHttp(options) {
       }
       client.send(options.body);
       client.onload = function () {
-        if (this.status >= 200 && this.status < 300) {
-          resolve(JSON.parse(this.response));
+        if (client.status >= 200 && client.status < 300) {
+          resolve(JSON.parse(client.response));
         } else {
-          var error = new Error(this.statusText);
-          let responseText;
-          if (this.response) {
-            try {
-              responseText = JSON.parse(this.response);
-            } catch (e) {
-              responseText = this.response
-            }
-          } else {
-            responseText = {};
-          }
-          error.response = responseText;
-          reject(error);
+          reject(handleXMLHttpRequestErrors(client));
         }
       }
       client.onerror = function () {
-        var error = new Error(this.statusText);
-        let responseText;
-        if (this.response) {
-          try {
-            responseText = JSON.parse(this.response);
-          } catch (e) {
-            responseText = this.response
-          }
-        } else {
-          responseText = {};
-        }
-        error.response = responseText;
-        reject(error);
+        reject(handleXMLHttpRequestErrors(client));
       }
     });
     // Workaround for cancelling requests with Fetch library for now...
@@ -60,10 +36,10 @@ export default function BoxHttp(options) {
   } else if (!options.useXHR && window && window.fetch) {
     return fetch(options.url, options)
       .then(handleErrors)
-      .then(constructResponse, options);
+      .then(response => constructResponse(response, options));
   }
   else {
-    let client = new XMLHttpRequest();
+    const client = new XMLHttpRequest();
     let request = new Promise((resolve, reject) => {
       let uri = options.url;
       let method = options.method;
@@ -74,8 +50,8 @@ export default function BoxHttp(options) {
       });
       client.send(options.body);
       client.onload = function () {
-        if (this.status >= 200 && this.status < 300) {
-          let returnData = (this.response) ? JSON.parse(this.response) : {};
+        if (client.status >= 200 && client.status < 300) {
+          let returnData = (client.response) ? JSON.parse(client.response) : {};
           let headers;
           try {
             headers = parseXHRHeaders(client.getAllResponseHeaders());
@@ -85,45 +61,17 @@ export default function BoxHttp(options) {
           let builtResponse = {
             data: returnData,
             headers: headers,
-            status: this.status
+            status: client.status,
+            statusText: client.statusText
           }
           resolve(constructResponse(builtResponse, options));
         } else {
-          var error = new Error(this.statusText);
-          error.status = this.status;
-          let responseText;
-          if (this.response) {
-            try {
-              responseText = JSON.parse(this.response);
-            } catch (e) {
-              responseText = this.response
-            }
-          } else {
-            responseText = {};
-          }
-          error.response = responseText;
-          reject(error);
+          console.log(client.getAllResponseHeaders());
+          reject(handleXMLHttpRequestErrors(client));
         }
       }
       client.onerror = function () {
-        let error;
-        if (this.statusText) {
-          error = new Error(this.statusText);
-        } else {
-          error = new Error("Unknown");
-        }
-        let responseText;
-        if (this.response) {
-          try {
-            responseText = JSON.parse(this.response);
-          } catch (e) {
-            responseText = this.response
-          }
-        } else {
-          responseText = {};
-        }
-        error.response = responseText;
-        reject(error);
+        reject(handleXMLHttpRequestErrors(client));
       }
     });
     if (options.returnCancelToken) {
@@ -137,6 +85,38 @@ export default function BoxHttp(options) {
     } else {
       return request;
     }
+  }
+  function handleXMLHttpRequestErrors(client) {
+    let error;
+    if (client.statusText) {
+      error = new Error(client.statusText);
+    } else {
+      error = new Error("Unknown");
+    }
+
+    let headers;
+    try {
+      headers = parseXHRHeaders(client.getAllResponseHeaders());
+    } catch (e) {
+      headers = client.getAllResponseHeaders();
+    }
+
+    let responseText;
+    if (client.response) {
+      try {
+        responseText = JSON.parse(client.response);
+      } catch (e) {
+        responseText = client.response
+      }
+    } else {
+      responseText = {};
+    }
+    error.response = {};
+    error.response.headers = headers;
+    error.response.status = client.status;
+    error.response.statusText = client.statusText;
+    error.response.data = responseText;
+    return error;
   }
   function handleErrors(response) {
     if (!response.ok) {
@@ -158,6 +138,10 @@ export default function BoxHttp(options) {
   }
 
   function constructResponse(response, options) {
+    console.log('options');
+    console.log(options);
+    console.log('response');
+    console.log(response);
     if (options && options.includeFullResponse) {
       if (response.data && response.headers && response.status) {
         return new Promise(function (resolve, reject) {
@@ -170,7 +154,22 @@ export default function BoxHttp(options) {
         status: ""
       };
       return new Promise(function (resolve, reject) {
-        buildResponse.headers = response.headers;
+        const headers = response.headers;
+        let retrieveHeaders;
+        if (headers && headers.entries && typeof (headers.entries) === 'function') {
+          retrieveHeaders = {};
+          const iter = headers.entries();
+          let header = iter.next();
+          while (!header.done) {
+            if (header.value && header.value.length && header.value.length === 2) {
+              retrieveHeaders[header.value[0]] = header.value[1];
+            }
+            header = iter.next();
+          }
+        } else {
+          retrieveHeaders = response.headers;
+        }
+        buildResponse.headers = retrieveHeaders;
         buildResponse.status = response.status;
         if (checkForJSONResponse(response)) {
           return response.json().catch(() => { return {}; })
