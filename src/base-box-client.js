@@ -182,6 +182,7 @@ export default class BaseBoxClient {
     let formattedOptions = {};
     (options.useXHR) ? formattedOptions.useXHR = true : null;
     (options.returnCancelToken) ? formattedOptions.returnCancelToken = true : null;
+    (options.includeFullResponse) ? formattedOptions.includeFullResponse = true : null;
     let uri = options.url;
 
     if (options.params) {
