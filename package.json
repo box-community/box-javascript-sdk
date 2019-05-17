@@ -31,8 +31,10 @@
   "author": "AM Grobelny",
   "license": "Apache-2.0",
   "dependencies": {
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.1.18",
     "es6-promise": "^4.0.5",
+    "formdata-polyfill": "^3.0.18",
     "rusha": "^0.8.6",
     "whatwg-fetch": "^2.0.2"
   }
