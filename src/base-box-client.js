@@ -31,6 +31,7 @@ export default class BaseBoxClient {
     this._simpleMode = (config.hasOwnProperty('simpleMode') && config.simpleMode === true) ? true : false;
     this._accessToken = this._checkTokenType(config);
     this._hasStoredAccessToken = (this._accessToken) ? true : false;
+    this._verbose = (config.hasOwnProperty('verbose') && config.verbose === true) ? true : false;
 
     this.httpService = config.httpService || BoxHttp;
     this.Promise = config.Promise || Promise;

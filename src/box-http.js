@@ -66,7 +66,9 @@ export default function BoxHttp(options) {
           }
           resolve(constructResponse(builtResponse, options));
         } else {
-          console.log(client.getAllResponseHeaders());
+          if (options.hasOwnProperty('verbose') && options.verbose) {
+            console.log(client.getAllResponseHeaders());
+          }
           reject(handleXMLHttpRequestErrors(client));
         }
       }
@@ -138,10 +140,17 @@ export default function BoxHttp(options) {
   }
 
   function constructResponse(response, options) {
-    console.log('options');
-    console.log(options);
-    console.log('response');
-    console.log(response);
+    let verbose = false ;
+    if (options.hasOwnProperty('verbose')) {
+      verbose = options.verbose;
+      delete options.verbose;
+    }
+    if (verbose) {
+      console.log('options');
+      console.log(options);
+      console.log('response');
+      console.log(response);
+    }
     if (options && options.includeFullResponse) {
       if (response.data && response.headers && response.status) {
         return new Promise(function (resolve, reject) {
