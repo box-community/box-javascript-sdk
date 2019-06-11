@@ -198,6 +198,12 @@ To use the `BasicBoxClient` and emit changes to `$scope`, use the following conf
 ```javascript
 var client = new box.BasicBoxClient({accessToken: "1234554321", httpService: $http});
 ```
+### Verbosity
+#### `verbose`
+```javascript
+var client = new box.BasicBoxClient({accessToken: "1234554321", verbose: true});
+```
+If you enable `verbose`, the SDK will output some debug messages to the browser console. 
 
 ## Example Usage
 
