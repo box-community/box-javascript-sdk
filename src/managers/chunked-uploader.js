@@ -1,4 +1,6 @@
 import BOX_CONSTANTS from '../config/box-constants';
+import Base64ArrayBuffer from '../util/base64-array-buffer';
+import Rusha from 'rusha';
 const PROGRESS_EVENT_NAME = "boxChunkedUploadProgress";
 const FAILURE_EVENT_NAME = "boxChunkedUploadFailure";
 const SUCCESS_EVENT_NAME = "boxChunkedUploadSuccess";
@@ -11,7 +13,9 @@ const END_CANCELLING_EVENT_NAME = "boxChunkedUploadEndCancelling";
 const ABORT_UPLOAD_EVENT_NAME = "boxChunkedUploadAbortUpload";
 export default class ChunkedUploader {
     constructor(filesManager, fileName, file, parentFolder, listeners, newVersionFileId) {
-        this.filesManager = filesManager
+        this.rusha = new Rusha();
+        this.hash = Rusha.createHash();
+        this.filesManager = filesManager;
         this.client = filesManager.client;
         this.file = file;
         this.fileName = fileName;
@@ -31,7 +35,8 @@ export default class ChunkedUploader {
             },
             expiresAt: "",
             partSize: 0,
-            totalParts: 0
+            totalParts: 0,
+            fileDigest: {}
         }
         this.getFailureNotification = listeners.getFailureNotification || null;
         this.getSuccessNotification = listeners.getSuccessNotification || null;
@@ -62,6 +67,7 @@ export default class ChunkedUploader {
         this.finishedCancelling = false;
         this.finishedUploading = false;
         this.retryCommitTimer = null;
+
         let self = this;
         this.abortUpload = function (evt) {
             if (self.retryCommitTimer) {
@@ -277,6 +283,8 @@ export default class ChunkedUploader {
                     self.fireEvent(self.progress, COMPLETED_EVENT_NAME);
                 }
                 if (self.getSuccessNotification !== null) {
+                    self.progress.didSucceed = true;
+                    self.progress.isComplete = true;
                     self.fireEvent(self.progress, SUCCESS_EVENT_NAME);
                 }
                 self.removeListeners();
@@ -338,19 +346,20 @@ export default class ChunkedUploader {
             part.retry++;
             let blob = part.part;
             return self.filesManager.createSHA1Hash(blob)
-                .then(function (hash) {
+                .then(function (shaObject) {
                     if (self.isCancelled) throw new Error("Upload cancelled");
                     self.processedCount++;
                     if (self.handleProgressUpdates !== null) {
                         self.progress.percentageProcessed = (self.processedCount / (self.session.totalParts)).toFixed(2);
                         self.fireEvent(self.progress, PROGRESS_EVENT_NAME);
                     }
-                    part.digest = hash;
+                    part.digest = shaObject.hash;
+                    self.hash.update(shaObject.arrayBuffer);
                     let options = {};
                     options.method = BOX_CONSTANTS.HTTP_VERBS.PUT;
                     options.url = self.session.endpoints.uploadPart;
                     options.headers = {
-                        "Digest": `sha=${hash}`,
+                        "Digest": `sha=${shaObject.hash}`,
                         "Content-Range": part.contentRange,
                         "Content-Type": "application/octet-stream"
                     };
@@ -412,7 +421,6 @@ export default class ChunkedUploader {
                     part.response = resp;
                     part.uploaded = true;
                 });
-
         } else {
             return new Promise.resolve();
         }
@@ -428,65 +436,72 @@ export default class ChunkedUploader {
         return Promise.all(self.tasks);
     }
 
-    commitUpload() {
-        let self = this;
-        self.finishedUploading = true;
-        this.parts.forEach(function (part) {
+    commitUpload(calculatedHash, preorderedParts) {
+        return new Promise((resolve, reject) => {
+            let self = this;
+
             if (self.isCancelled) throw new Error("Upload cancelled");
-            if (part.uploaded === false) {
-                self.finishedUploading = false;
-                self.abortUpload();
+            let orderedParts = [];
+            let hash = '';
+            if (calculatedHash) {
+                hash = calculatedHash;
+            } else {
+                const digest = self.hash.digest();
+                hash = Base64ArrayBuffer(digest);
             }
-        })
-        if (self.isCancelled) throw new Error("Upload cancelled");
-        let orderedParts = [];
-        return self.filesManager.createSHA1Hash(self.file)
-            .then(function (hash) {
-                if (self.isCancelled) throw new Error("Upload cancelled");
+            if (preorderedParts) {
+                orderedParts = preorderedParts
+            } else {
+                self.finishedUploading = true;
+                this.parts.forEach(function (part) {
+                    if (self.isCancelled) throw new Error("Upload cancelled");
+                    if (part.uploaded === false) {
+                        self.finishedUploading = false;
+                        self.abortUpload();
+                    }
+                });
                 self.parts.forEach(function (part) {
                     if (!part || !part.response || !part.response.part) {
                         self.abortUpload();
                     }
                     orderedParts.push(part.response.part);
                 });
-                let options = {};
-                options.chunkedUpload = true;
-                options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
-                options.url = self.session.endpoints.commit;
-                options.headers = {
-                    "Digest": `sha=${hash}`
-                };
-                options.body = JSON.stringify({
-                    parts: orderedParts
-                });
-                options.includeFullResponse = true;
-                if (self.filesManager.client.httpService.defaults) {
-                    return self.client.makeRequest(null, options);
-                } else {
-                    options.useXHR = true;
-                    return self.client.makeRequest(null, options);
-                }
-            })
-            .then(function (resp) {
-                if (resp.status && resp.status == 202) {
-                    if (self.isCancelled) throw new Error("Upload cancelled");
-                    let retrySeconds;
-                    if (resp && resp.headers && typeof resp.headers === "function") {
-                        retrySeconds = resp.headers()["retry-after"];
-                    } else if (resp && resp.headers && resp.headers["retry-after"]) {
-                        retrySeconds = resp.headers["retry-after"];
-                    } else {
-                        retrySeconds = 30;
-                    }
-
-
-                    retrySeconds *= 1000;
-                    return self.delay(retrySeconds)
-                        .then(function () { return self.commitUpload(); });
-                } else {
-                    return resp;
-                }
+            }
+            let options = {};
+            options.chunkedUpload = true;
+            options.method = BOX_CONSTANTS.HTTP_VERBS.POST;
+            options.url = self.session.endpoints.commit;
+            options.headers = {
+                "Digest": `sha=${hash}`
+            };
+            options.body = JSON.stringify({
+                parts: orderedParts
             });
+            options.includeFullResponse = true;
+            options.useXHR = true;
+            return self.client.makeRequest(null, options)
+                .then(function (resp) {
+                    if (resp.status && resp.status == 202) {
+                        if (self.isCancelled) throw new Error("Upload cancelled");
+                        let retrySeconds;
+                        if (resp && resp.headers && typeof resp.headers === "function") {
+                            retrySeconds = resp.headers()["retry-after"];
+                        } else if (resp && resp.headers && resp.headers["retry-after"]) {
+                            retrySeconds = resp.headers["retry-after"];
+                        } else {
+                            retrySeconds = 30;
+                        }
+                        retrySeconds *= 1000;
+                        return new Promise((resolve, reject) => {
+                            self.delay(retrySeconds)
+                                .then(() => resolve(self.commitUpload(hash, orderedParts)))
+                        });
+                    } else {
+                        return Promise.resolve(resp);
+                    }
+                })
+                .then((resp) => resolve(resp));
+        })
     }
 
     delay(t) {
@@ -500,3 +515,4 @@ export default class ChunkedUploader {
         });
     }
 }
+
