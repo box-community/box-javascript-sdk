@@ -67,7 +67,6 @@ export default class ChunkedUploader {
         this.finishedCancelling = false;
         this.finishedUploading = false;
         this.retryCommitTimer = null;
-        this.retryPromises = [];
 
         let self = this;
         this.abortUpload = function (evt) {
