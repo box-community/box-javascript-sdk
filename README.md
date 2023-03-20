@@ -1,3 +1,7 @@
+<img src="images/box-dev-logo-clip.png" 
+alt= “box-dev-logo” 
+style="margin-left:-10px;"
+width=40%;>
 # To Generate the Box Clientside SDK
 
 1. Clone or fork this project.
